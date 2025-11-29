@@ -16,6 +16,12 @@ type UpdateFavoriteRequest struct {
 	Description string `json:"description"`
 }
 
+type AddFavoriteResponse struct {
+	UserID int `json:"user_id"`
+	AssetID int `json:"asset_id"`
+	AssetType models.AssetType `json:"asset_type"`
+}
+
 
 func FavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -72,7 +78,11 @@ func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(nil)
+	json.NewEncoder(w).Encode(AddFavoriteResponse{
+		UserID: userID,
+		AssetID: *addFavoriteRequest.AssetID,
+		AssetType: *addFavoriteRequest.AssetType,
+	})
 }
 
 func handleGetFavorites(w http.ResponseWriter, r *http.Request) {
