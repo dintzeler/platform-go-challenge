@@ -31,28 +31,22 @@ func buildFavoritesResponse(favorites []models.Favorite, data *storage.DataStore
 		Insights: []models.Insight{},
 		Audiences: []models.Audience{},
 	}
-	for _, fav := range favorites {
-		switch fav.AssetType {
-		case models.AssetTypeChart:
-			for _, chart := range data.Charts {
-				if chart.ID == fav.AssetID {
-					favoritesResponse.Charts = append(favoritesResponse.Charts, chart)
-				}
-			}
-		case models.AssetTypeInsight:
-			for _, insight := range data.Insights {
-				if insight.ID == fav.AssetID {
-					favoritesResponse.Insights = append(favoritesResponse.Insights, insight)
-				}
-			}
-		case models.AssetTypeAudience:
-			for _, audience := range data.Audiences {
-				if audience.ID == fav.AssetID {
-					favoritesResponse.Audiences = append(favoritesResponse.Audiences, audience)
-				}
-			}
-		}
-	}
+    for _, fav := range favorites {
+        switch fav.AssetType {
+        case models.AssetTypeChart:
+            if chart := storage.GetById(data.Charts, fav.AssetID); chart != nil {
+                favoritesResponse.Charts = append(favoritesResponse.Charts, *chart)
+            }
+        case models.AssetTypeInsight:
+            if insight := storage.GetById(data.Insights, fav.AssetID); insight != nil {
+                favoritesResponse.Insights = append(favoritesResponse.Insights, *insight)
+            }
+        case models.AssetTypeAudience:
+            if audience := storage.GetById(data.Audiences, fav.AssetID); audience != nil {
+                favoritesResponse.Audiences = append(favoritesResponse.Audiences, *audience)
+            }
+        }
+    }
 	return favoritesResponse
 }
 
