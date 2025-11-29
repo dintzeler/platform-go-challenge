@@ -29,3 +29,19 @@ func LoadData(fileName string) (*DataStore, error) {
 	}
 	return &dataStore, nil
 }
+
+func SaveData(fileName string, dataStore *DataStore) error {
+    file, err := os.Create(fileName)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    encoder := json.NewEncoder(file)
+    encoder.SetIndent("", "  ") // Optional: for pretty formatting
+    err = encoder.Encode(dataStore)
+    if err != nil {
+        return err
+    }
+    return nil
+}

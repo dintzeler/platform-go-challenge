@@ -6,11 +6,12 @@ import (
     "github.com/dintzeler/platform-go-challenge/services"
 	"strconv"
 	"fmt"
+	"github.com/dintzeler/platform-go-challenge/models"
 )
 
 type AddFavoriteRequest struct {
 	AssetID   int    `json:"asset_id"`
-	AssetType string `json:"asset_type"`
+	AssetType models.AssetType `json:"asset_type"`
 }
 
 func FavortitesHandler(w http.ResponseWriter, r *http.Request) {

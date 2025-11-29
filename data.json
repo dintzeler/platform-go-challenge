@@ -6,9 +6,18 @@
       "x_axis": "Month",
       "y_axis": "Sales",
       "data": [
-        { "x": 1, "y": 100 },
-        { "x": 2, "y": 150 },
-        { "x": 3, "y": 200 }
+        {
+          "x": 1,
+          "y": 100
+        },
+        {
+          "x": 2,
+          "y": 150
+        },
+        {
+          "x": 3,
+          "y": 200
+        }
       ],
       "description": "This chart shows sales over the first three months."
     },
@@ -18,9 +27,18 @@
       "x_axis": "Day",
       "y_axis": "Visitors",
       "data": [
-        { "x": 1, "y": 300 },
-        { "x": 2, "y": 400 },
-        { "x": 3, "y": 500 }
+        {
+          "x": 1,
+          "y": 300
+        },
+        {
+          "x": 2,
+          "y": 400
+        },
+        {
+          "x": 3,
+          "y": 500
+        }
       ],
       "description": "This chart shows daily visitors over three days."
     },
@@ -30,9 +48,18 @@
       "x_axis": "Week",
       "y_axis": "Revenue",
       "data": [
-        { "x": 1, "y": 1000 },
-        { "x": 2, "y": 1200 },
-        { "x": 3, "y": 1400 }
+        {
+          "x": 1,
+          "y": 1000
+        },
+        {
+          "x": 2,
+          "y": 1200
+        },
+        {
+          "x": 3,
+          "y": 1400
+        }
       ],
       "description": "This chart shows weekly revenue over three weeks."
     }
@@ -87,9 +114,30 @@
     }
   ],
   "favorites": [
-    { "user_id": 1, "asset_id": 1, "asset_type": "chart" },
-    { "user_id": 1, "asset_id": 3, "asset_type": "insight" },
-    { "user_id": 2, "asset_id": 2, "asset_type": "insight" },
-    { "user_id": 2, "asset_id": 1, "asset_type": "audience" }
+    {
+      "user_id": 1,
+      "asset_id": 1,
+      "asset_type": "chart"
+    },
+    {
+      "user_id": 1,
+      "asset_id": 3,
+      "asset_type": "insight"
+    },
+    {
+      "user_id": 2,
+      "asset_id": 2,
+      "asset_type": "insight"
+    },
+    {
+      "user_id": 2,
+      "asset_id": 1,
+      "asset_type": "audience"
+    },
+    {
+      "user_id": 3,
+      "asset_id": 1,
+      "asset_type": "chart"
+    }
   ]
 }
