@@ -20,7 +20,7 @@ type UpdateFavoriteRequest struct {
 	Description string `json:"description"`
 }
 
-func FavortitesHandler(w http.ResponseWriter, r *http.Request) {
+func FavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		handleGetFavorites(w, r)
