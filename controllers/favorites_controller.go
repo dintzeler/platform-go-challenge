@@ -5,7 +5,6 @@ import (
     "net/http"
     "github.com/dintzeler/platform-go-challenge/services"
 	"strconv"
-	"fmt"
 	"github.com/dintzeler/platform-go-challenge/models"
 	"github.com/dintzeler/platform-go-challenge/validators"
 )
@@ -32,28 +31,36 @@ func FavoritesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	userIDStr := r.Header.Get("User-ID")
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
-		http.Error(w, "Invalid User-ID", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(&validators.ValidationError{
+			Message:   "Invalid User-ID",
+			ErrorCode: "INVALID_USER_ID",
+		})
 		return
 	}
 
 	var addFavoriteRequest validators.AddFavoriteRequest
 	err = json.NewDecoder(r.Body).Decode(&addFavoriteRequest)
-	fmt.Println("Decoded add favorite request:", addFavoriteRequest)
 	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(&validators.ValidationError{
+			Message:   "Invalid request body",
+			ErrorCode: "INVALID_REQUEST_BODY",
+		})
 		return
 	}
 
 	err = validators.ValidateAddFavoriteRequest(addFavoriteRequest)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(err)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 
 	adddedData := services.AddFavorite(userID, *addFavoriteRequest.AssetID, *addFavoriteRequest.AssetType)
 
@@ -71,9 +78,7 @@ func handleGetFavorites(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Content-Type", "application/json")
     favorites := services.GetFavorites(userID)
-	fmt.Println("Fetched favorites:", favorites)
     
-    // Encode and send JSON response
     json.NewEncoder(w).Encode(favorites)
 }
 
