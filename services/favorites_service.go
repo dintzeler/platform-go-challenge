@@ -2,7 +2,6 @@ package services
 
 import (
 	"github.com/dintzeler/platform-go-challenge/models"
-	"fmt"
 	"github.com/dintzeler/platform-go-challenge/storage"
 )
 
@@ -12,25 +11,19 @@ type FavoritesResponse struct {
 	Audiences []models.Audience `json:"audiences"`
 }
 
-
-
-
-
 func getUserFavorites(userID int) []models.Favorite {
 	data, err := storage.LoadData("data.json")
 	if err != nil {
-		fmt.Println("Error loading data:", err)
 		return []models.Favorite{}
 	}
 
 	return storage.GetUserFavorites(data, userID)
 }
 
-
 func addFavorite(userID int, assetID int, assetType models.AssetType) error {
 	data, err := storage.LoadData("data.json")
 	if err != nil {
-		fmt.Println("Error loading data:", err)
+		
 		return err
 	}
 
@@ -97,14 +90,12 @@ func removeFavorite(data *storage.DataStore, userID int, assetID int, assetType 
 func updateAssetDescription(data *storage.DataStore, userID int, assetID int, assetType models.AssetType, description string) {
 	assetExists := storage.AssetExists(data, assetID, assetType)
 	if !assetExists {
-		fmt.Println("Asset does not exist")
 		return
 	}
 
 	userFavorites := storage.GetUserFavorites(data, userID)
 	favoriteExists := storage.FavoriteExists(userFavorites, assetID, assetType)
 	if !favoriteExists {
-		fmt.Println("Favorite does not exist")
 		return
 	}
 
@@ -138,7 +129,6 @@ func updateAssetDescription(data *storage.DataStore, userID int, assetID int, as
 func GetFavorites(userID int) FavoritesResponse {
 	data, err := storage.LoadData("data.json")
 	if err != nil {
-		fmt.Println("Error loading data:", err)
 		return FavoritesResponse{}
 	}
 	
@@ -151,7 +141,6 @@ func GetFavorites(userID int) FavoritesResponse {
 func AddFavorite(userID int, assetID int, assetType models.AssetType) map[string]string {
 	data, err := storage.LoadData("data.json")
 	if err != nil {
-		fmt.Println("Error loading data:", err)
 		return map[string]string{
 			"status": "Error loading data",
 		}
@@ -187,8 +176,6 @@ func AddFavorite(userID int, assetID int, assetType models.AssetType) map[string
 func DeleteFavorite(userID int, assetID int, assetType models.AssetType) map[string]string {
 	data, err := storage.LoadData("data.json")
 	if err != nil {
-		fmt.Println("Error loading data:", err)
-
 		return map[string]string{
 			"status": "Error loading data",
 		}
@@ -209,7 +196,6 @@ func DeleteFavorite(userID int, assetID int, assetType models.AssetType) map[str
 func UpdateFavorite(userID int, assetType models.AssetType, assetID int, description string) map[string]string {
 	data, err := storage.LoadData("data.json")
 	if err != nil {
-		fmt.Println("Error loading data:", err)
 		return map[string]string{
 			"status": "Error loading data",
 		}
@@ -217,7 +203,6 @@ func UpdateFavorite(userID int, assetType models.AssetType, assetID int, descrip
 
 	assetExists := storage.AssetExists(data, assetID, assetType)
 	if !assetExists {
-		fmt.Println("Asset does not exist")
 		return map[string]string{
 			"status": "Asset does not exist",
 		}
@@ -226,7 +211,6 @@ func UpdateFavorite(userID int, assetType models.AssetType, assetID int, descrip
 	userFavorites := storage.GetUserFavorites(data, userID)
 	favoriteExists := storage.FavoriteExists(userFavorites, assetID, assetType)
 	if !favoriteExists {
-		fmt.Println("Favorite does not exist")
 		return map[string]string{
 			"status": "Favorite does not exist",
 		}

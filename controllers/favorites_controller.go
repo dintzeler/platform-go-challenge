@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"github.com/dintzeler/platform-go-challenge/models"
 	"github.com/dintzeler/platform-go-challenge/validators"
+	"github.com/dintzeler/platform-go-challenge/customerrors"
 )
 
 type UpdateFavoriteRequest struct {
@@ -36,7 +37,7 @@ func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(&validators.ValidationError{
+		json.NewEncoder(w).Encode(&customerrors.ValidationError{
 			Message:   "Invalid User-ID",
 			ErrorCode: "INVALID_USER_ID",
 		})
@@ -47,7 +48,7 @@ func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 	err = json.NewDecoder(r.Body).Decode(&addFavoriteRequest)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(&validators.ValidationError{
+		json.NewEncoder(w).Encode(&customerrors.ValidationError{
 			Message:   "Invalid request body",
 			ErrorCode: "INVALID_REQUEST_BODY",
 		})
@@ -64,7 +65,6 @@ func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 
 	adddedData := services.AddFavorite(userID, *addFavoriteRequest.AssetID, *addFavoriteRequest.AssetType)
 
-	// Encode and send JSON response
 	json.NewEncoder(w).Encode(adddedData)
 }
 
@@ -102,7 +102,6 @@ func handleDeleteFavorite(w http.ResponseWriter, r *http.Request) {
 
 	deletedData := services.DeleteFavorite(userID, assetID, assetType)
 
-	// Encode and send JSON response
 	json.NewEncoder(w).Encode(deletedData)
 }
 
@@ -120,6 +119,5 @@ func handleUpdateFavorite(w http.ResponseWriter, r *http.Request) {
 
 	updatedData := services.UpdateFavorite(userID, updateFavorite.AssetType, updateFavorite.AssetID, updateFavorite.Description)
 
-	// Encode and send JSON response
 	json.NewEncoder(w).Encode(updatedData)
 }

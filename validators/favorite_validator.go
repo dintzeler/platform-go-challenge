@@ -2,16 +2,8 @@ package validators
 
 import (
 	"github.com/dintzeler/platform-go-challenge/models"
+	"github.com/dintzeler/platform-go-challenge/customerrors"
 )
-
-type ValidationError struct {
-	Message string `json:"message"`
-	ErrorCode string `json:"error_code"`
-}
-
-func (e *ValidationError) Error() string {
-	return e.Message
-}
 
 type AddFavoriteRequest struct {
 	AssetID   *int              `json:"asset_id"`
@@ -32,7 +24,7 @@ func ValidateAddFavoriteRequest(addFavoriteRequest AddFavoriteRequest) error {
 	
 func validateAssetType(assetType *models.AssetType) error {
     if assetType == nil {
-        return &ValidationError{
+        return &customerrors.ValidationError{
 			Message:   "asset_type is a required field",
 			ErrorCode: "MISSING_ASSET_TYPE",
 		}
@@ -42,7 +34,7 @@ func validateAssetType(assetType *models.AssetType) error {
 	case models.AssetTypeChart, models.AssetTypeInsight, models.AssetTypeAudience:
 		return nil
 	default:
-		return &ValidationError{
+		return &customerrors.ValidationError{
 			Message:   "Invalid asset_type (type must be 'chart', 'insight', or 'audience')",
 			ErrorCode: "INVALID_ASSET_TYPE",
 		}
@@ -51,12 +43,12 @@ func validateAssetType(assetType *models.AssetType) error {
 
 func validateAssetID(assetID *int) error {
 	if assetID == nil {
-		return &ValidationError{
+		return &customerrors.ValidationError{
 			Message:   "asset_id is a required field",
 			ErrorCode: "MISSING_ASSET_ID",
 		}
 	}else if *assetID <= 0 {
-		return &ValidationError{
+		return &customerrors.ValidationError{
 			Message:   "asset_id must be a positive integer",
 			ErrorCode: "INVALID_ASSET_ID",
 		}
