@@ -7,12 +7,8 @@ import (
 	"strconv"
 	"fmt"
 	"github.com/dintzeler/platform-go-challenge/models"
+	"github.com/dintzeler/platform-go-challenge/validators"
 )
-
-type AddFavoriteRequest struct {
-	AssetID   int    `json:"asset_id"`
-	AssetType models.AssetType `json:"asset_type"`
-}
 
 type UpdateFavoriteRequest struct {
 	AssetID   int    `json:"asset_id"`
@@ -43,16 +39,23 @@ func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var addFavoriteRequest AddFavoriteRequest
+	var addFavoriteRequest validators.AddFavoriteRequest
 	err = json.NewDecoder(r.Body).Decode(&addFavoriteRequest)
+	fmt.Println("Decoded add favorite request:", addFavoriteRequest)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
+	err = validators.ValidateAddFavoriteRequest(addFavoriteRequest)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
-	adddedData := services.AddFavorite(userID, addFavoriteRequest.AssetID, addFavoriteRequest.AssetType)
+	adddedData := services.AddFavorite(userID, *addFavoriteRequest.AssetID, *addFavoriteRequest.AssetType)
 
 	// Encode and send JSON response
 	json.NewEncoder(w).Encode(adddedData)

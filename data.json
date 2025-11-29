@@ -133,6 +133,11 @@
       "user_id": 2,
       "asset_id": 1,
       "asset_type": "audience"
+    },
+    {
+      "user_id": 1,
+      "asset_id": 2,
+      "asset_type": "chart"
     }
   ]
 }
