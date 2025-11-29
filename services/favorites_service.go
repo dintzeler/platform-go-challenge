@@ -13,7 +13,7 @@ type FavoritesResponse struct {
 }
 
 
-func searchFavoritesByUserID(data *storage.DataStore, userID int) []models.Favorite {
+func findUserFavorites(data *storage.DataStore, userID int) []models.Favorite {
 	var userFavorites []models.Favorite
 	for _, fav := range data.Favorites {
 		if fav.UserID == userID {
@@ -31,10 +31,10 @@ func getUserFavorites(userID int) []models.Favorite {
 		return []models.Favorite{}
 	}
 
-	return searchFavoritesByUserID(data, userID)
+	return findUserFavorites(data, userID)
 }
 
-func checkFavoriteExists(favorites []models.Favorite, assetID int, assetType models.AssetType) bool {
+func favoriteExists(favorites []models.Favorite, assetID int, assetType models.AssetType) bool {
 	for _, fav := range favorites {
 		if fav.AssetID == assetID && fav.AssetType == assetType {
 			return true
@@ -64,7 +64,7 @@ func addFavorite(userID int, assetID int, assetType models.AssetType) error {
 	return nil
 }
 
-func checkAssetExists(assetID int, assetType models.AssetType) bool {
+func assetExists(assetID int, assetType models.AssetType) bool {
 	data, err := storage.LoadData("data.json")
 	if err != nil {
 		fmt.Println("Error loading data:", err)
@@ -113,7 +113,7 @@ func buildFavoritesResponse(favorites []models.Favorite, data *storage.DataStore
 	return favoritesResponse
 }
 
-func deleteFavorite(data *storage.DataStore, userID int, assetID int, assetType models.AssetType) error {
+func removeFavorite(data *storage.DataStore, userID int, assetID int, assetType models.AssetType) error {
 	var updatedFavorites []models.Favorite
 	for _, fav := range data.Favorites {
 		if !(fav.UserID == userID && fav.AssetID == assetID && fav.AssetType == assetType) {
@@ -130,15 +130,15 @@ func deleteFavorite(data *storage.DataStore, userID int, assetID int, assetType 
 }
 
 
-func updateFavorite(data *storage.DataStore, userID int, assetID int, assetType models.AssetType, description string) {
-	assetExists := checkAssetExists(assetID, assetType)
+func updateAssetDescription(data *storage.DataStore, userID int, assetID int, assetType models.AssetType, description string) {
+	assetExists := assetExists(assetID, assetType)
 	if !assetExists {
 		fmt.Println("Asset does not exist")
 		return
 	}
 
-	facoriteExists := checkFavoriteExists(getUserFavorites(userID), assetID, assetType)
-	if !facoriteExists {
+	favoriteExists := favoriteExists(getUserFavorites(userID), assetID, assetType)
+	if !favoriteExists {
 		fmt.Println("Favorite does not exist")
 		return
 	}
@@ -177,7 +177,7 @@ func GetFavorites(userID int) FavoritesResponse {
 		return FavoritesResponse{}
 	}
 	
-	favorites := searchFavoritesByUserID(data, userID)
+	favorites := findUserFavorites(data, userID)
 	favoritesResponse := buildFavoritesResponse(favorites, data)
 	
 	return favoritesResponse
@@ -185,14 +185,14 @@ func GetFavorites(userID int) FavoritesResponse {
 
 func AddFavorite(userID int, assetID int, assetType models.AssetType) map[string]string {
 	userFavorites := getUserFavorites(userID)
-	favoriteExists := checkFavoriteExists(userFavorites, assetID, assetType)
+	favoriteExists := favoriteExists(userFavorites, assetID, assetType)
 	if favoriteExists {
 		return map[string]string{
 			"status": "Favorite already exists",
 		}
 	}
 
-	assetExists := checkAssetExists(assetID, assetType)
+	assetExists := assetExists(assetID, assetType)
 	if !assetExists {
 		return map[string]string{
 			"status": "Asset does not exist",
@@ -222,7 +222,7 @@ func DeleteFavorite(userID int, assetID int, assetType models.AssetType) map[str
 		}
 	}
 
-	err = deleteFavorite(data, userID, assetID, assetType)
+	err = removeFavorite(data, userID, assetID, assetType)
 	if err != nil {
 		return map[string]string{
 			"status": "Error deleting favorite",
@@ -243,7 +243,7 @@ func UpdateFavorite(userID int, assetType models.AssetType, assetID int, descrip
 		}
 	}
 
-	updateFavorite(data, userID, assetID, assetType, description)
+	updateAssetDescription(data, userID, assetID, assetType, description)
 
 	return map[string]string{
 		"status": "Favorite updated successfully",
