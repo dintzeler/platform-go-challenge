@@ -13,15 +13,7 @@ type FavoritesResponse struct {
 }
 
 
-func findUserFavorites(data *storage.DataStore, userID int) []models.Favorite {
-	var userFavorites []models.Favorite
-	for _, fav := range data.Favorites {
-		if fav.UserID == userID {
-			userFavorites = append(userFavorites, fav)
-		}
-	}
-	return userFavorites
-}
+
 
 
 func getUserFavorites(userID int) []models.Favorite {
@@ -31,17 +23,9 @@ func getUserFavorites(userID int) []models.Favorite {
 		return []models.Favorite{}
 	}
 
-	return findUserFavorites(data, userID)
+	return storage.GetUserFavorites(data, userID)
 }
 
-func favoriteExists(favorites []models.Favorite, assetID int, assetType models.AssetType) bool {
-	for _, fav := range favorites {
-		if fav.AssetID == assetID && fav.AssetType == assetType {
-			return true
-		}
-	}
-	return false
-}
 
 func addFavorite(userID int, assetID int, assetType models.AssetType) error {
 	data, err := storage.LoadData("data.json")
@@ -56,34 +40,14 @@ func addFavorite(userID int, assetID int, assetType models.AssetType) error {
 		AssetType: assetType,
 	}
 
-	data.Favorites = append(data.Favorites, newFavorite)
-	err = storage.SaveData("data.json", data)
+	err = storage.CreateFavorite(data, newFavorite)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func assetExists(assetID int, assetType models.AssetType) bool {
-	data, err := storage.LoadData("data.json")
-	if err != nil {
-		fmt.Println("Error loading data:", err)
-		return false
-	}
-	switch assetType {
-	case models.AssetTypeChart:
-		asset := storage.GetById(data.Charts, assetID)
-		return asset != nil
-	case models.AssetTypeInsight:
-		asset := storage.GetById(data.Insights, assetID)
-		return asset != nil
-	case models.AssetTypeAudience:
-		asset := storage.GetById(data.Audiences, assetID)
-		return asset != nil
-	default:
-		return false
-	}
-}
+
 
 func buildFavoritesResponse(favorites []models.Favorite, data *storage.DataStore) FavoritesResponse {
 	favoritesResponse := FavoritesResponse{
@@ -131,13 +95,14 @@ func removeFavorite(data *storage.DataStore, userID int, assetID int, assetType 
 
 
 func updateAssetDescription(data *storage.DataStore, userID int, assetID int, assetType models.AssetType, description string) {
-	assetExists := assetExists(assetID, assetType)
+	assetExists := storage.AssetExists(data, assetID, assetType)
 	if !assetExists {
 		fmt.Println("Asset does not exist")
 		return
 	}
 
-	favoriteExists := favoriteExists(getUserFavorites(userID), assetID, assetType)
+	userFavorites := storage.GetUserFavorites(data, userID)
+	favoriteExists := storage.FavoriteExists(userFavorites, assetID, assetType)
 	if !favoriteExists {
 		fmt.Println("Favorite does not exist")
 		return
@@ -177,29 +142,36 @@ func GetFavorites(userID int) FavoritesResponse {
 		return FavoritesResponse{}
 	}
 	
-	favorites := findUserFavorites(data, userID)
+	favorites := storage.GetUserFavorites(data, userID)
 	favoritesResponse := buildFavoritesResponse(favorites, data)
 	
 	return favoritesResponse
 }
 
 func AddFavorite(userID int, assetID int, assetType models.AssetType) map[string]string {
-	userFavorites := getUserFavorites(userID)
-	favoriteExists := favoriteExists(userFavorites, assetID, assetType)
+	data, err := storage.LoadData("data.json")
+	if err != nil {
+		fmt.Println("Error loading data:", err)
+		return map[string]string{
+			"status": "Error loading data",
+		}
+	}
+	userFavorites := storage.GetUserFavorites(data, userID)
+	favoriteExists := storage.FavoriteExists(userFavorites, assetID, assetType)
 	if favoriteExists {
 		return map[string]string{
 			"status": "Favorite already exists",
 		}
 	}
-
-	assetExists := assetExists(assetID, assetType)
+	
+	assetExists := storage.AssetExists(data, assetID, assetType)
 	if !assetExists {
 		return map[string]string{
 			"status": "Asset does not exist",
 		}
 	}
 
-	err := addFavorite(userID, assetID, assetType)
+	err = addFavorite(userID, assetID, assetType)
 	if err != nil {
 		return map[string]string{
 			"status": "Error adding favorite",
@@ -243,7 +215,29 @@ func UpdateFavorite(userID int, assetType models.AssetType, assetID int, descrip
 		}
 	}
 
-	updateAssetDescription(data, userID, assetID, assetType, description)
+	assetExists := storage.AssetExists(data, assetID, assetType)
+	if !assetExists {
+		fmt.Println("Asset does not exist")
+		return map[string]string{
+			"status": "Asset does not exist",
+		}
+	}
+
+	userFavorites := storage.GetUserFavorites(data, userID)
+	favoriteExists := storage.FavoriteExists(userFavorites, assetID, assetType)
+	if !favoriteExists {
+		fmt.Println("Favorite does not exist")
+		return map[string]string{
+			"status": "Favorite does not exist",
+		}
+	}
+
+	err = storage.UpdateAssetDescription(data, userID, assetID, assetType, description)
+	if err != nil {
+		return map[string]string{
+			"status": "Error updating favorite",
+		}
+	}
 
 	return map[string]string{
 		"status": "Favorite updated successfully",

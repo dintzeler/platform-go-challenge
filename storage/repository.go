@@ -14,3 +14,70 @@ func GetById[T models.Asset](items []T, id int) T {
 	var zero T
 	return zero
 }
+
+func GetUserFavorites(data *DataStore, userID int) []models.Favorite {
+	var userFavorites []models.Favorite
+	for _, fav := range data.Favorites {
+		if fav.UserID == userID {
+			userFavorites = append(userFavorites, fav)
+		}
+	}
+	return userFavorites
+}
+
+func CreateFavorite(data *DataStore, favorite models.Favorite) error {
+    data.Favorites = append(data.Favorites, favorite)
+    return SaveData("data.json", data)
+}
+
+func FavoriteExists(favorites []models.Favorite, assetID int, assetType models.AssetType) bool {
+    for _, fav := range favorites {
+        if fav.AssetID == assetID && fav.AssetType == assetType {
+            return true
+        }
+    }
+    return false
+}
+
+func AssetExists(data *DataStore,assetID int, assetType models.AssetType) bool {
+	switch assetType {
+	case models.AssetTypeChart:
+		asset := GetById(data.Charts, assetID)
+		return asset != nil
+	case models.AssetTypeInsight:
+		asset := GetById(data.Insights, assetID)
+		return asset != nil
+	case models.AssetTypeAudience:
+		asset := GetById(data.Audiences, assetID)
+		return asset != nil
+	default:
+		return false
+	}
+}
+
+func UpdateAssetDescription(data *DataStore, userID int, assetID int, assetType models.AssetType, description string) error {
+	switch assetType {
+	case models.AssetTypeChart:
+		for _, chart := range data.Charts {
+			if chart.GetID() == assetID {
+				chart.SetDescription(description)
+			}
+		}
+	case models.AssetTypeInsight:
+		for _, insight := range data.Insights {
+			if insight.GetID() == assetID {
+				insight.SetDescription(description)
+			}
+		}
+	case models.AssetTypeAudience:
+		for _, audience := range data.Audiences {
+			if audience.GetID() == assetID {
+				audience.SetDescription(description)
+			}
+		}
+	}
+
+	return SaveData("data.json", data)
+
+
+}
