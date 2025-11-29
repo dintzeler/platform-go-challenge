@@ -3,6 +3,8 @@ package services
 import (
 	"github.com/dintzeler/platform-go-challenge/models"
 	"github.com/dintzeler/platform-go-challenge/storage"
+	"github.com/dintzeler/platform-go-challenge/customerrors"
+	"net/http"
 )
 
 type FavoritesResponse struct {
@@ -20,22 +22,19 @@ func getUserFavorites(userID int) []models.Favorite {
 	return storage.GetUserFavorites(data, userID)
 }
 
-func addFavorite(userID int, assetID int, assetType models.AssetType) error {
-	data, err := storage.LoadData("data.json")
-	if err != nil {
-		
-		return err
-	}
-
+func addFavorite(data *storage.DataStore, userID int, assetID int, assetType models.AssetType) error {
 	newFavorite := models.Favorite{
 		UserID:    userID,
 		AssetID:   assetID,
 		AssetType: assetType,
 	}
 
-	err = storage.CreateFavorite(data, newFavorite)
+	err := storage.CreateFavorite(data, newFavorite)
 	if err != nil {
-		return err
+		return &customerrors.ValidationError{
+			Message:   "Error saving favorite",
+			ErrorCode: "FAVORITE_SAVE_ERROR",
+		}
 	}
 	return nil
 }
@@ -138,39 +137,35 @@ func GetFavorites(userID int) FavoritesResponse {
 	return favoritesResponse
 }
 
-func AddFavorite(userID int, assetID int, assetType models.AssetType) map[string]string {
+func AddFavorite(userID int, assetID int, assetType models.AssetType) (int, error) {
 	data, err := storage.LoadData("data.json")
 	if err != nil {
-		return map[string]string{
-			"status": "Error loading data",
+		return http.StatusInternalServerError, &customerrors.ValidationError{
+			Message:   "Error loading data",
+			ErrorCode: "DATA_LOAD_ERROR",
 		}
 	}
+
 	userFavorites := storage.GetUserFavorites(data, userID)
 	favoriteExists := storage.FavoriteExists(userFavorites, assetID, assetType)
 	if favoriteExists {
-		return map[string]string{
-			"status": "Favorite already exists",
-		}
+		return http.StatusOK, nil
 	}
 	
 	assetExists := storage.AssetExists(data, assetID, assetType)
 	if !assetExists {
-		return map[string]string{
-			"status": "Asset does not exist",
+		return http.StatusNotFound, &customerrors.ValidationError{
+			Message:   "Asset does not exist",
+			ErrorCode: "ASSET_NOT_FOUND",
 		}
 	}
 
-	err = addFavorite(userID, assetID, assetType)
+	err = addFavorite(data, userID, assetID, assetType)
 	if err != nil {
-		return map[string]string{
-			"status": "Error adding favorite",
-		}
+		return http.StatusInternalServerError, err
 	}
 
-	return map[string]string{
-		"status": "Favorite added successfully",
-	}
-
+	return http.StatusCreated, nil
 }
 
 func DeleteFavorite(userID int, assetID int, assetType models.AssetType) map[string]string {

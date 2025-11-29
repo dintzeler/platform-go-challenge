@@ -16,6 +16,7 @@ type UpdateFavoriteRequest struct {
 	Description string `json:"description"`
 }
 
+
 func FavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -63,9 +64,15 @@ func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	adddedData := services.AddFavorite(userID, *addFavoriteRequest.AssetID, *addFavoriteRequest.AssetType)
+	status, err := services.AddFavorite(userID, *addFavoriteRequest.AssetID, *addFavoriteRequest.AssetType)
+	if err != nil {
+		w.WriteHeader(status)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
 
-	json.NewEncoder(w).Encode(adddedData)
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(nil)
 }
 
 func handleGetFavorites(w http.ResponseWriter, r *http.Request) {
