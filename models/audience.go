@@ -1,3 +1,5 @@
+package models
+
 type Audience struct {
 	ID string `json:"id"`
 	Gender string `json:"gender"`

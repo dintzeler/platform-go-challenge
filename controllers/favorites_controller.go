@@ -3,6 +3,7 @@ package controllers
 import (
     "encoding/json"
     "net/http"
+    "github.com/dintzeler/platform-go-challenge/services"
 )
 
 func FavortitesHandler(w http.ResponseWriter, r *http.Request) {
@@ -23,9 +24,8 @@ func FavortitesHandler(w http.ResponseWriter, r *http.Request) {
 func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	adddedData := map[string]string{
-		"status": "Favorite added successfully",
-	}
+	adddedData := services.AddFavorite("userID", nil)
+
 
 	// Encode and send JSON response
 	json.NewEncoder(w).Encode(adddedData)
@@ -33,11 +33,7 @@ func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 
 func handleGetFavorites(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
-    favorites := map[string][]string{
-		"colors": {"red", "blue", "green"},
-		"foods":  {"pizza", "sushi", "tacos"},
-		"movies": {"Inception", "The Matrix", "Interstellar"},
-	}
+    favorites := services.GetFavorites("userID")
     
     // Encode and send JSON response
     json.NewEncoder(w).Encode(favorites)
@@ -46,9 +42,7 @@ func handleGetFavorites(w http.ResponseWriter, r *http.Request) {
 func handleDeleteFavorite(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	deletedData := map[string]string{
-		"status": "Favorite deleted successfully",
-	}
+	deletedData := services.DeleteFavorite("userID", "assetID")
 
 	// Encode and send JSON response
 	json.NewEncoder(w).Encode(deletedData)
@@ -57,9 +51,8 @@ func handleDeleteFavorite(w http.ResponseWriter, r *http.Request) {
 func handleUpdateFavorite(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	updatedData := map[string]string{
-		"status": "Favorite updated successfully",
-	}
+	updatedData := services.UpdateFavorite("userID", nil)
+
 	// Encode and send JSON response
 	json.NewEncoder(w).Encode(updatedData)
 }
