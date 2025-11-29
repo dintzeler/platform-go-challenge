@@ -13,6 +13,7 @@ type FavoritesResponse struct {
 }
 
 
+
 func searchFavoritesByUserID(data *storage.DataStore, userID int) []models.Favorite {
 	var userFavorites []models.Favorite
 	for _, fav := range data.Favorites {
@@ -34,15 +35,18 @@ func buildFavoritesResponse(favorites []models.Favorite, data *storage.DataStore
     for _, fav := range favorites {
         switch fav.AssetType {
         case models.AssetTypeChart:
-            if chart := storage.GetById(data.Charts, fav.AssetID); chart != nil {
+			chart := storage.GetById(data.Charts, fav.AssetID)
+            if chart != nil {
                 favoritesResponse.Charts = append(favoritesResponse.Charts, *chart)
             }
         case models.AssetTypeInsight:
-            if insight := storage.GetById(data.Insights, fav.AssetID); insight != nil {
+			insight := storage.GetById(data.Insights, fav.AssetID)
+            if insight != nil {
                 favoritesResponse.Insights = append(favoritesResponse.Insights, *insight)
             }
         case models.AssetTypeAudience:
-            if audience := storage.GetById(data.Audiences, fav.AssetID); audience != nil {
+			audience := storage.GetById(data.Audiences, fav.AssetID)
+            if audience != nil {
                 favoritesResponse.Audiences = append(favoritesResponse.Audiences, *audience)
             }
         }
@@ -66,6 +70,7 @@ func GetFavorites(userID int) FavoritesResponse {
 }
 
 func AddFavorite(userID int, assetID int, assetType string) map[string]string {
+	
 	return map[string]string{
 		"status": "Favorite added successfully",
 	}
