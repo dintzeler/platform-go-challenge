@@ -4,6 +4,8 @@ import (
     "encoding/json"
     "net/http"
     "github.com/dintzeler/platform-go-challenge/services"
+	"strconv"
+	"fmt"
 )
 
 func FavortitesHandler(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +26,7 @@ func FavortitesHandler(w http.ResponseWriter, r *http.Request) {
 func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	adddedData := services.AddFavorite("userID", nil)
+	adddedData := services.AddFavorite(1, nil)
 
 
 	// Encode and send JSON response
@@ -32,8 +34,16 @@ func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGetFavorites(w http.ResponseWriter, r *http.Request) {
+	userIDStr := r.Header.Get("User-ID")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid User-ID", http.StatusBadRequest)
+		return
+	}
+
     w.Header().Set("Content-Type", "application/json")
-    favorites := services.GetFavorites("userID")
+    favorites := services.GetFavorites(userID)
+	fmt.Println("Fetched favorites:", favorites)
     
     // Encode and send JSON response
     json.NewEncoder(w).Encode(favorites)
