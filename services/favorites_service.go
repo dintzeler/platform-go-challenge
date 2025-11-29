@@ -2,18 +2,9 @@ package services
 
 import (
 	"github.com/dintzeler/platform-go-challenge/models"
-	"encoding/json"
-	"os"
 	"fmt"
+	"github.com/dintzeler/platform-go-challenge/storage"
 )
-
-type DataStore struct {
-	Charts []models.Chart `json:"charts"`
-	Insights []models.Insight `json:"insights"`
-	Audiences []models.Audience `json:"audiences"`
-	Users []models.User `json:"users"`
-	Favorites []models.Favorite `json:"favorites"`
-}
 
 type FavoritesResponse struct {
 	Charts	 []models.Chart `json:"charts"`
@@ -21,23 +12,8 @@ type FavoritesResponse struct {
 	Audiences []models.Audience `json:"audiences"`
 }
 
-func LoadData(fileName string) (*DataStore, error) {
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
 
-	var dataStore DataStore
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&dataStore)
-	if err != nil {
-		return nil, err
-	}
-	return &dataStore, nil
-}
-
-func searchFavoritesByUserID(data *DataStore, userID int) []models.Favorite {
+func searchFavoritesByUserID(data *storage.DataStore, userID int) []models.Favorite {
 	var userFavorites []models.Favorite
 	for _, fav := range data.Favorites {
 		if fav.UserID == userID {
@@ -47,13 +23,9 @@ func searchFavoritesByUserID(data *DataStore, userID int) []models.Favorite {
 	return userFavorites
 }
 
-func AddFavorite(userID int, asset models.Asset) map[string]string {
-	return map[string]string{
-		"status": "Favorite added successfully",
-	}
-}
 
-func buildFavoritesResponse(favorites []models.Favorite, data *DataStore) FavoritesResponse {
+
+func buildFavoritesResponse(favorites []models.Favorite, data *storage.DataStore) FavoritesResponse {
 	favoritesResponse := FavoritesResponse{
 		Charts:   []models.Chart{},
 		Insights: []models.Insight{},
@@ -87,7 +59,7 @@ func buildFavoritesResponse(favorites []models.Favorite, data *DataStore) Favori
 
 
 func GetFavorites(userID int) FavoritesResponse {
-	data, err := LoadData("data.json")
+	data, err := storage.LoadData("data.json")
 	if err != nil {
 		fmt.Println("Error loading data:", err)
 		return FavoritesResponse{}
@@ -97,6 +69,12 @@ func GetFavorites(userID int) FavoritesResponse {
 	favoritesResponse := buildFavoritesResponse(favorites, data)
 	
 	return favoritesResponse
+}
+
+func AddFavorite(userID int, assetID int, assetType string) map[string]string {
+	return map[string]string{
+		"status": "Favorite added successfully",
+	}
 }
 
 func DeleteFavorite(userID string, assetID string) map[string]string {

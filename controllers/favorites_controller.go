@@ -8,6 +8,11 @@ import (
 	"fmt"
 )
 
+type AddFavoriteRequest struct {
+	AssetID   int    `json:"asset_id"`
+	AssetType string `json:"asset_type"`
+}
+
 func FavortitesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -24,10 +29,23 @@ func FavortitesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
+	userIDStr := r.Header.Get("User-ID")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid User-ID", http.StatusBadRequest)
+		return
+	}
+
+	var addFavoriteRequest AddFavoriteRequest
+	err = json.NewDecoder(r.Body).Decode(&addFavoriteRequest)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
-	adddedData := services.AddFavorite(1, nil)
-
+	adddedData := services.AddFavorite(userID, addFavoriteRequest.AssetID, addFavoriteRequest.AssetType)
 
 	// Encode and send JSON response
 	json.NewEncoder(w).Encode(adddedData)
