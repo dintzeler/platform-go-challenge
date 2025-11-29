@@ -14,6 +14,12 @@ type AddFavoriteRequest struct {
 	AssetType models.AssetType `json:"asset_type"`
 }
 
+type UpdateFavoriteRequest struct {
+	AssetID   int    `json:"asset_id"`
+	AssetType models.AssetType `json:"asset_type"`
+	Description string `json:"description"`
+}
+
 func FavortitesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -69,18 +75,42 @@ func handleGetFavorites(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleDeleteFavorite(w http.ResponseWriter, r *http.Request) {
+	userIDStr := r.Header.Get("User-ID")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid User-ID", http.StatusBadRequest)
+		return
+	}
+	assetIDStr := r.URL.Query().Get("asset_id")
+	assetID, err := strconv.Atoi(assetIDStr)
+	if err != nil {
+		http.Error(w, "Invalid Asset-ID", http.StatusBadRequest)
+		return
+	}
+	assetTypeStr := r.URL.Query().Get("asset_type")
+	assetType := models.AssetType(assetTypeStr)
+
 	w.Header().Set("Content-Type", "application/json")
 
-	deletedData := services.DeleteFavorite("userID", "assetID")
+	deletedData := services.DeleteFavorite(userID, assetID, assetType)
 
 	// Encode and send JSON response
 	json.NewEncoder(w).Encode(deletedData)
 }
 
 func handleUpdateFavorite(w http.ResponseWriter, r *http.Request) {
+	userIDStr := r.Header.Get("User-ID")
+	userID, err := strconv.Atoi(userIDStr)
 	w.Header().Set("Content-Type", "application/json")
 
-	updatedData := services.UpdateFavorite("userID", nil)
+	var updateFavorite UpdateFavoriteRequest
+	err = json.NewDecoder(r.Body).Decode(&updateFavorite)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	updatedData := services.UpdateFavorite(userID, updateFavorite.AssetType, updateFavorite.AssetID, updateFavorite.Description)
 
 	// Encode and send JSON response
 	json.NewEncoder(w).Encode(updatedData)

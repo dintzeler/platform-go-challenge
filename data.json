@@ -19,7 +19,7 @@
           "y": 200
         }
       ],
-      "description": "This chart shows sales over the first three months."
+      "description": "description random"
     },
     {
       "id": 2,
@@ -133,11 +133,6 @@
       "user_id": 2,
       "asset_id": 1,
       "asset_type": "audience"
-    },
-    {
-      "user_id": 3,
-      "asset_id": 1,
-      "asset_type": "chart"
     }
   ]
 }
