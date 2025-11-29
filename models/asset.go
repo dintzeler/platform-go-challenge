@@ -1,7 +1,7 @@
 package models
 
 type Asset interface {
-	GetID() string
+	GetID() int
 	GetType() AssetType
 	GetDescription() string
 	SetDescription(desc string)
@@ -10,7 +10,7 @@ type Asset interface {
 type AssetType string
 
 const (
-	AssetTypeChart   AssetType = "chart"
+	AssetTypeChart AssetType = "chart"
 	AssetTypeInsight AssetType = "insight"
 	AssetTypeAudience AssetType = "audience"
 )

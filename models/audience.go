@@ -1,7 +1,7 @@
 package models
 
 type Audience struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 	Gender string `json:"gender"`
 	BirthCountry string `json:"birth_country"`
 	AgeGroup string `json:"age_group"`
@@ -10,12 +10,12 @@ type Audience struct {
 	Description string `json:"description"`
 }
 
-func (a *Audience) GetID() string {
+func (a *Audience) GetID() int {
 	return a.ID
 }
 
-func (a *Audience) GetType() string {
-	return "audience"
+func (a *Audience) GetType() AssetType {
+	return AssetTypeAudience
 }
 
 func (a *Audience) GetDescription() string {

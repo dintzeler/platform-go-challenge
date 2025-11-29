@@ -1,7 +1,7 @@
 package models
 
 type Chart struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 	Title string `json:"title"`
 	XAxis string `json:"x_axis"`
 	YAxis string `json:"y_axis"`
@@ -9,12 +9,12 @@ type Chart struct {
 	Description string `json:"description"`
 }
 
-func (c *Chart) GetID() string {
+func (c *Chart) GetID() int {
 	return c.ID
 }
 
-func (c *Chart) GetType() string {
-	return "chart"
+func (c *Chart) GetType() AssetType {
+	return AssetTypeChart
 }
 
 func (c *Chart) GetDescription() string {

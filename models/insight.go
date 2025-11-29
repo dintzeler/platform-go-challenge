@@ -1,17 +1,17 @@
 package models
 
 type Insight struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 	Text string `json:"text"`
 	Description string `json:"description"`
 }
 
-func (i *Insight) GetID() string {
+func (i *Insight) GetID() int {
 	return i.ID
 }
 
-func (i *Insight) GetType() string {
-	return "insight"
+func (i *Insight) GetType() AssetType {
+	return AssetTypeInsight
 }
 
 func (i *Insight) GetDescription() string {
