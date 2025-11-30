@@ -10,12 +10,6 @@ import (
 	"github.com/dintzeler/platform-go-challenge/customerrors"
 )
 
-type UpdateFavoriteRequest struct {
-	AssetID   int    `json:"asset_id"`
-	AssetType models.AssetType `json:"asset_type"`
-	Description string `json:"description"`
-}
-
 type AddFavoriteResponse struct {
 	UserID int `json:"user_id"`
 	AssetID int `json:"asset_id"`
@@ -31,7 +25,7 @@ func FavoritesHandler(w http.ResponseWriter, r *http.Request) {
 		handleAddFavorite(w, r)
 	case http.MethodDelete:
 		handleDeleteFavorite(w, r)
-	case http.MethodPut:
+	case http.MethodPatch:
 		handleUpdateFavorite(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -130,10 +124,10 @@ func handleDeleteFavorite(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleUpdateFavorite(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	userIDStr := r.Header.Get("User-ID")
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&customerrors.ValidationError{
@@ -143,14 +137,21 @@ func handleUpdateFavorite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var updateFavorite UpdateFavoriteRequest
-	err = json.NewDecoder(r.Body).Decode(&updateFavorite)
+	updateFavorite, err := validators.ValidateUpdateFavoriteRequest(r)
 	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(err)
 		return
 	}
 
-	updatedData := services.UpdateFavorite(userID, updateFavorite.AssetType, updateFavorite.AssetID, updateFavorite.Description)
+	status, err := services.UpdateFavorite(userID, updateFavorite.AssetType, updateFavorite.AssetID, updateFavorite.Description)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(status)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
 
-	json.NewEncoder(w).Encode(updatedData)
+	w.WriteHeader(status)
 }

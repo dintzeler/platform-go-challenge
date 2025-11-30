@@ -169,37 +169,36 @@ func DeleteFavorite(userID int, assetID int, assetType models.AssetType) (int, e
 	return http.StatusNoContent, nil
 }
 
-func UpdateFavorite(userID int, assetType models.AssetType, assetID int, description string) map[string]string {
+func UpdateFavorite(userID int, assetType models.AssetType, assetID int, description string) (int, error) {
 	data, err := storage.LoadData("data.json")
 	if err != nil {
-		return map[string]string{
-			"status": "Error loading data",
+		return http.StatusInternalServerError, &customerrors.ValidationError{
+			Message:   "Error loading data",
+			ErrorCode: "DATA_LOAD_ERROR",
 		}
 	}
 
 	assetExists := storage.AssetExists(data, assetID, assetType)
 	if !assetExists {
-		return map[string]string{
-			"status": "Asset does not exist",
+		return http.StatusNotFound, &customerrors.ValidationError{
+			Message:   "Asset does not exist",
+			ErrorCode: "ASSET_NOT_FOUND",
 		}
 	}
 
 	userFavorites := storage.GetUserFavorites(data, userID)
 	favoriteExists := storage.FavoriteExists(userFavorites, assetID, assetType)
 	if !favoriteExists {
-		return map[string]string{
-			"status": "Favorite does not exist",
+		return http.StatusForbidden, &customerrors.ValidationError{
+			Message:   "User does not have this asset as favorite",
+			ErrorCode: "FAVORITE_NOT_FOUND",
 		}
 	}
 
 	err = storage.UpdateAssetDescription(data, userID, assetID, assetType, description)
 	if err != nil {
-		return map[string]string{
-			"status": "Error updating favorite",
-		}
+		return http.StatusInternalServerError, err
 	}
 
-	return map[string]string{
-		"status": "Favorite updated successfully",
-	}
+	return http.StatusNoContent, nil
 }

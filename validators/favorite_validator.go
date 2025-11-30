@@ -9,13 +9,46 @@ import (
 )
 
 type AddFavoriteRequest struct {
-	AssetID   *int              `json:"asset_id"`
+	AssetID *int `json:"asset_id"`
 	AssetType *models.AssetType `json:"asset_type"`
 }
 
 type DeleteFavoriteRequest struct {
-	AssetID *int              `json:"asset_id"`
+	AssetID *int `json:"asset_id"`
 	AssetType *models.AssetType `json:"asset_type"`
+}
+
+type UpdateFavoriteRequest struct {
+	AssetID int `json:"asset_id"`
+	AssetType models.AssetType `json:"asset_type"`
+	Description string `json:"description"`
+}
+
+func ValidateUpdateFavoriteRequest(r *http.Request) (*UpdateFavoriteRequest, error) {
+	var updateFavorite UpdateFavoriteRequest
+	err := json.NewDecoder(r.Body).Decode(&updateFavorite)
+	if err != nil {
+		return nil, &customerrors.ValidationError{
+			Message:   "Invalid request body",
+			ErrorCode: "INVALID_REQUEST_BODY",
+		}
+	}
+	err = validateAssetID(&updateFavorite.AssetID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validateAssetType(&updateFavorite.AssetType)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validateDescription(updateFavorite.Description)
+	if err != nil {
+		return nil, err
+	}
+
+	return &updateFavorite, nil
 }
 
 func ValidateAddFavoriteRequest(r *http.Request) (*AddFavoriteRequest, error) {
@@ -107,6 +140,16 @@ func validateAssetID(assetID *int) error {
 		return &customerrors.ValidationError{
 			Message:   "asset_id must be a positive integer",
 			ErrorCode: "INVALID_ASSET_ID",
+		}
+	}
+	return nil
+}
+
+func validateDescription(description string) error {
+	if description == "" {
+		return &customerrors.ValidationError{
+			Message:   "description is a required field",
+			ErrorCode: "MISSING_DESCRIPTION",
 		}
 	}
 	return nil
