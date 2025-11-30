@@ -50,23 +50,6 @@ func buildFavoritesResponse(favorites []models.Favorite, data *storage.DataStore
 	return favoritesResponse
 }
 
-func removeFavorite(data *storage.DataStore, userID int, assetID int, assetType models.AssetType) error {
-	var updatedFavorites []models.Favorite
-	for _, fav := range data.Favorites {
-		if !(fav.UserID == userID && fav.AssetID == assetID && fav.AssetType == assetType) {
-			updatedFavorites = append(updatedFavorites, fav)
-		}
-	}
-
-	data.Favorites = updatedFavorites
-	err := storage.SaveData("data.json", data)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-
 func updateAssetDescription(data *storage.DataStore, userID int, assetID int, assetType models.AssetType, description string) {
 	assetExists := storage.AssetExists(data, assetID, assetType)
 	if !assetExists {
@@ -152,24 +135,21 @@ func AddFavorite(userID int, assetID int, assetType models.AssetType) (int, erro
 	return http.StatusCreated, nil
 }
 
-func DeleteFavorite(userID int, assetID int, assetType models.AssetType) map[string]string {
+func DeleteFavorite(userID int, assetID int, assetType models.AssetType) (int, error) {
 	data, err := storage.LoadData("data.json")
 	if err != nil {
-		return map[string]string{
-			"status": "Error loading data",
+		return http.StatusInternalServerError, &customerrors.ValidationError{
+			Message:   "Error loading data",
+			ErrorCode: "DATA_LOAD_ERROR",
 		}
 	}
 
-	err = removeFavorite(data, userID, assetID, assetType)
+	err = storage.RemoveFavorite(data, userID, assetID, assetType)
 	if err != nil {
-		return map[string]string{
-			"status": "Error deleting favorite",
-		}
+		return http.StatusInternalServerError, err
 	}
 	
-	return map[string]string{
-		"status": "Favorite deleted successfully",
-	}
+	return http.StatusNoContent, nil
 }
 
 func UpdateFavorite(userID int, assetType models.AssetType, assetID int, description string) map[string]string {

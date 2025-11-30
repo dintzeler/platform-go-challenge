@@ -113,23 +113,32 @@ func handleDeleteFavorite(w http.ResponseWriter, r *http.Request) {
 	userIDStr := r.Header.Get("User-ID")
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
-		http.Error(w, "Invalid User-ID", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(&customerrors.ValidationError{
+			Message:   "Invalid User-ID",
+			ErrorCode: "INVALID_USER_ID",
+		})
 		return
 	}
-	assetIDStr := r.URL.Query().Get("asset_id")
-	assetID, err := strconv.Atoi(assetIDStr)
+
+	deleteFavoriteRequest, err := validators.ValidateDeleteFavorite(r)
 	if err != nil {
-		http.Error(w, "Invalid Asset-ID", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(err)
 		return
 	}
-	assetTypeStr := r.URL.Query().Get("asset_type")
-	assetType := models.AssetType(assetTypeStr)
 
-	w.Header().Set("Content-Type", "application/json")
+	status, err := services.DeleteFavorite(userID, *deleteFavoriteRequest.AssetID, *deleteFavoriteRequest.AssetType)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(status)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
 
-	deletedData := services.DeleteFavorite(userID, assetID, assetType)
-
-	json.NewEncoder(w).Encode(deletedData)
+	w.WriteHeader(status)
 }
 
 func handleUpdateFavorite(w http.ResponseWriter, r *http.Request) {

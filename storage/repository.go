@@ -84,6 +84,16 @@ func UpdateAssetDescription(data *DataStore, userID int, assetID int, assetType 
 	}
 
 	return SaveData("data.json", data)
+}
 
+func RemoveFavorite(data *DataStore, userID int, assetID int, assetType models.AssetType) error {
+	var updatedFavorites []models.Favorite
+	for _, fav := range data.Favorites {
+		if !(fav.UserID == userID && fav.AssetID == assetID && fav.AssetType == assetType) {
+			updatedFavorites = append(updatedFavorites, fav)
+		}
+	}
 
+	data.Favorites = updatedFavorites
+	return SaveData("data.json", data)
 }

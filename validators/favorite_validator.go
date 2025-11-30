@@ -3,10 +3,17 @@ package validators
 import (
 	"github.com/dintzeler/platform-go-challenge/models"
 	"github.com/dintzeler/platform-go-challenge/customerrors"
+	"net/http"
+	"strconv"
 )
 
 type AddFavoriteRequest struct {
 	AssetID   *int              `json:"asset_id"`
+	AssetType *models.AssetType `json:"asset_type"`
+}
+
+type DeleteFavoriteRequest struct {
+	AssetID *int              `json:"asset_id"`
 	AssetType *models.AssetType `json:"asset_type"`
 }
 
@@ -21,7 +28,47 @@ func ValidateAddFavoriteRequest(addFavoriteRequest AddFavoriteRequest) error {
 	}
 	return nil
 }
-	
+
+func ValidateDeleteFavorite(r *http.Request) (*DeleteFavoriteRequest, error) {
+	assetIDStr := r.URL.Query().Get("asset_id")
+	if assetIDStr == "" {
+		return nil, &customerrors.ValidationError{
+			Message:   "asset_id is a required field",
+			ErrorCode: "MISSING_ASSET_ID",
+		}
+	}
+	assetID, err := strconv.Atoi(assetIDStr)
+	if err != nil {
+		return nil, &customerrors.ValidationError{
+			Message:   "Invalid asset_id",
+			ErrorCode: "INVALID_ASSET_ID",
+		}
+	}
+	err = validateAssetID(&assetID)
+	if err != nil {
+		return nil, err
+	}
+
+	assetTypeStr := r.URL.Query().Get("asset_type")
+	if assetTypeStr == "" {
+		return nil, &customerrors.ValidationError{
+			Message:   "asset_type is a required field",
+			ErrorCode: "MISSING_ASSET_TYPE",
+		}
+	}
+
+	assetType := models.AssetType(assetTypeStr)
+	err = validateAssetType(&assetType)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DeleteFavoriteRequest{
+		AssetID: &assetID,
+		AssetType: &assetType,
+	}, nil
+}
+
 func validateAssetType(assetType *models.AssetType) error {
     if assetType == nil {
         return &customerrors.ValidationError{
