@@ -125,16 +125,19 @@ func updateAssetDescription(data *storage.DataStore, userID int, assetID int, as
 }
 
 
-func GetFavorites(userID int) FavoritesResponse {
+func GetFavorites(userID int) (*FavoritesResponse, error) {
 	data, err := storage.LoadData("data.json")
 	if err != nil {
-		return FavoritesResponse{}
+		return nil, &customerrors.ValidationError{
+			Message:   "Error loading data",
+			ErrorCode: "DATA_LOAD_ERROR",
+		}
 	}
 	
 	favorites := storage.GetUserFavorites(data, userID)
 	favoritesResponse := buildFavoritesResponse(favorites, data)
 	
-	return favoritesResponse
+	return &favoritesResponse, nil
 }
 
 func AddFavorite(userID int, assetID int, assetType models.AssetType) (int, error) {

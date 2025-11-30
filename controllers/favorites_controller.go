@@ -86,16 +86,26 @@ func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGetFavorites(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+
 	userIDStr := r.Header.Get("User-ID")
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
-		http.Error(w, "Invalid User-ID", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(&customerrors.ValidationError{
+			Message:   "Invalid User-ID",
+			ErrorCode: "INVALID_USER_ID",
+		})
 		return
 	}
 
-    w.Header().Set("Content-Type", "application/json")
-    favorites := services.GetFavorites(userID)
-    
+    favorites, err := services.GetFavorites(userID)
+    if err != nil {
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(err)
+        return
+    }
+
     json.NewEncoder(w).Encode(favorites)
 }
 
