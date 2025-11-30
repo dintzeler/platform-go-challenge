@@ -25,8 +25,14 @@ func GetUserFavorites(data *DataStore, userID int) []models.Favorite {
 	return userFavorites
 }
 
-func CreateFavorite(data *DataStore, favorite models.Favorite) error {
-    data.Favorites = append(data.Favorites, favorite)
+func CreateFavorite(data *DataStore, userID int, assetID int, assetType models.AssetType) error {
+	newFavorite := models.Favorite{
+		UserID: userID,
+		AssetID: assetID,
+		AssetType: assetType,
+	}
+
+    data.Favorites = append(data.Favorites, newFavorite)
     return SaveData("data.json", data)
 }
 

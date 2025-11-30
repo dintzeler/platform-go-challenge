@@ -22,25 +22,6 @@ func getUserFavorites(userID int) []models.Favorite {
 	return storage.GetUserFavorites(data, userID)
 }
 
-func addFavorite(data *storage.DataStore, userID int, assetID int, assetType models.AssetType) error {
-	newFavorite := models.Favorite{
-		UserID:    userID,
-		AssetID:   assetID,
-		AssetType: assetType,
-	}
-
-	err := storage.CreateFavorite(data, newFavorite)
-	if err != nil {
-		return &customerrors.ValidationError{
-			Message:   "Error saving favorite",
-			ErrorCode: "FAVORITE_SAVE_ERROR",
-		}
-	}
-	return nil
-}
-
-
-
 func buildFavoritesResponse(favorites []models.Favorite, data *storage.DataStore) FavoritesResponse {
 	favoritesResponse := FavoritesResponse{
 		Charts:   []models.Chart{},
@@ -163,7 +144,7 @@ func AddFavorite(userID int, assetID int, assetType models.AssetType) (int, erro
 		}
 	}
 
-	err = addFavorite(data, userID, assetID, assetType)
+	err = storage.CreateFavorite(data, userID, assetID, assetType)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

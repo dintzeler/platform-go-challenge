@@ -4,6 +4,7 @@ import (
 	"github.com/dintzeler/platform-go-challenge/models"
 	"encoding/json"
 	"os"
+	"github.com/dintzeler/platform-go-challenge/customerrors"
 )
 
 type DataStore struct {
@@ -41,7 +42,10 @@ func SaveData(fileName string, dataStore *DataStore) error {
     encoder.SetIndent("", "  ") // Optional: for pretty formatting
     err = encoder.Encode(dataStore)
     if err != nil {
-        return err
+        return &customerrors.ValidationError{
+			Message:   "Error saving data",
+			ErrorCode: "DATA_SAVE_ERROR",
+		}
     }
     return nil
 }
