@@ -5,6 +5,7 @@ import (
 	"github.com/dintzeler/platform-go-challenge/customerrors"
 	"net/http"
 	"strconv"
+	"encoding/json"
 )
 
 type AddFavoriteRequest struct {
@@ -17,16 +18,24 @@ type DeleteFavoriteRequest struct {
 	AssetType *models.AssetType `json:"asset_type"`
 }
 
-func ValidateAddFavoriteRequest(addFavoriteRequest AddFavoriteRequest) error {
-	err := validateAssetID(addFavoriteRequest.AssetID)
+func ValidateAddFavoriteRequest(r *http.Request) (*AddFavoriteRequest, error) {
+	var addFavoriteRequest AddFavoriteRequest
+	err := json.NewDecoder(r.Body).Decode(&addFavoriteRequest)
 	if err != nil {
-		return err
+		return nil, &customerrors.ValidationError{
+			Message:   "Invalid request body",
+			ErrorCode: "INVALID_REQUEST_BODY",
+		}
+	}
+	err = validateAssetID(addFavoriteRequest.AssetID)
+	if err != nil {
+		return nil, err
 	}
 	err = validateAssetType(addFavoriteRequest.AssetType)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &addFavoriteRequest, nil
 }
 
 func ValidateDeleteFavorite(r *http.Request) (*DeleteFavoriteRequest, error) {

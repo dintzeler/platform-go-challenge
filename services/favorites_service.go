@@ -113,12 +113,6 @@ func AddFavorite(userID int, assetID int, assetType models.AssetType) (int, erro
 		}
 	}
 
-	userFavorites := storage.GetUserFavorites(data, userID)
-	favoriteExists := storage.FavoriteExists(userFavorites, assetID, assetType)
-	if favoriteExists {
-		return http.StatusOK, nil
-	}
-	
 	assetExists := storage.AssetExists(data, assetID, assetType)
 	if !assetExists {
 		return http.StatusNotFound, &customerrors.ValidationError{
@@ -126,6 +120,14 @@ func AddFavorite(userID int, assetID int, assetType models.AssetType) (int, erro
 			ErrorCode: "ASSET_NOT_FOUND",
 		}
 	}
+
+	userFavorites := storage.GetUserFavorites(data, userID)
+	favoriteExists := storage.FavoriteExists(userFavorites, assetID, assetType)
+	if favoriteExists {
+		return http.StatusOK, nil
+	}
+	
+
 
 	err = storage.CreateFavorite(data, userID, assetID, assetType)
 	if err != nil {
@@ -144,6 +146,21 @@ func DeleteFavorite(userID int, assetID int, assetType models.AssetType) (int, e
 		}
 	}
 
+	assetExists := storage.AssetExists(data, assetID, assetType)
+	if !assetExists {
+		return http.StatusNotFound, &customerrors.ValidationError{
+			Message:   "Asset does not exist",
+			ErrorCode: "ASSET_NOT_FOUND",
+		}
+	}
+	userFavorites := storage.GetUserFavorites(data, userID)
+	favoriteExists := storage.FavoriteExists(userFavorites, assetID, assetType)
+	if !favoriteExists {
+		return http.StatusNotFound, &customerrors.ValidationError{
+			Message:   "Favorite does not exist",
+			ErrorCode: "FAVORITE_NOT_FOUND",
+		}
+	}
 	err = storage.RemoveFavorite(data, userID, assetID, assetType)
 	if err != nil {
 		return http.StatusInternalServerError, err

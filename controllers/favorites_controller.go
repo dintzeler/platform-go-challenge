@@ -50,25 +50,13 @@ func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
-	var addFavoriteRequest validators.AddFavoriteRequest
-	err = json.NewDecoder(r.Body).Decode(&addFavoriteRequest)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(&customerrors.ValidationError{
-			Message:   "Invalid request body",
-			ErrorCode: "INVALID_REQUEST_BODY",
-		})
-		return
-	}
-
-	err = validators.ValidateAddFavoriteRequest(addFavoriteRequest)
+	
+	addFavoriteRequest, err := validators.ValidateAddFavoriteRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(err)
 		return
 	}
-
 
 	status, err := services.AddFavorite(userID, *addFavoriteRequest.AssetID, *addFavoriteRequest.AssetType)
 	if err != nil {
@@ -142,9 +130,18 @@ func handleDeleteFavorite(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleUpdateFavorite(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	userIDStr := r.Header.Get("User-ID")
 	userID, err := strconv.Atoi(userIDStr)
-	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(&customerrors.ValidationError{
+			Message:   "Invalid User-ID",
+			ErrorCode: "INVALID_USER_ID",
+		})
+		return
+	}
 
 	var updateFavorite UpdateFavoriteRequest
 	err = json.NewDecoder(r.Body).Decode(&updateFavorite)
