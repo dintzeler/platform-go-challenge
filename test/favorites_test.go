@@ -1,0 +1,249 @@
+package tests
+
+import (
+    "github.com/dintzeler/platform-go-challenge/controllers"
+    "net/http"
+    "net/http/httptest"
+    "testing"
+    "encoding/json"
+    "strings"
+    "os"
+    "path/filepath"
+    "runtime"
+)
+
+func init() {
+    // Get the directory of this test file
+    _, filename, _, _ := runtime.Caller(0)
+    testDir := filepath.Dir(filename)
+    
+    // Go up one level to the project root
+    projectRoot := filepath.Dir(testDir)
+    
+    // Set the absolute path to test_data.json
+    dataFile := filepath.Join(projectRoot, "test_data.json")
+    os.Setenv("DATA_FILE", dataFile)
+    
+    // Verify the file exists
+    if _, err := os.Stat(dataFile); os.IsNotExist(err) {
+        panic("test_data.json not found at: " + dataFile)
+    }
+}
+
+func TestAddFavorite(t *testing.T) {
+	t.Run("Add favorite with invalid User-ID", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("POST", "/favorites", nil)
+		controllers.FavoritesHandler(w, req) 
+		
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("Expected status 400, got %d", w.Code)
+		}
+
+		// Check JSON response
+        var response map[string]interface{}
+        err := json.Unmarshal(w.Body.Bytes(), &response)
+        if err != nil {
+            t.Fatalf("Failed to parse JSON response: %v", err)
+        }
+
+        if message := response["message"]; message != "Invalid User-ID"  {
+            t.Errorf("Response message: %v", message)
+        }
+
+		if errorCode := response["error_code"]; errorCode != "INVALID_USER_ID" {
+			t.Errorf("Response error_code: %v", errorCode)
+		}
+	})
+	
+	t.Run("Add favorite without providing request body", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("POST", "/favorites", strings.NewReader(""))
+		req.Header.Set("User-ID", "1")
+		controllers.FavoritesHandler(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("Expected status 400, got %d", w.Code)
+		}
+
+		// Check JSON response
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		if err != nil {
+			t.Fatalf("Failed to parse JSON response: %v", err)
+		}
+
+		if message := response["message"]; message != "Invalid request body"  {
+			t.Errorf("Response message: %v", message)
+		}
+		if errorCode := response["error_code"]; errorCode != "INVALID_REQUEST_BODY" {
+			t.Errorf("Response error_code: %v", errorCode)
+		}
+	})
+
+	t.Run("Add favorite without providing asset_id", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		reqBody := `{"asset_type": "chart"}`
+		req, _ := http.NewRequest("POST", "/favorites", strings.NewReader(reqBody))
+		req.Header.Set("User-ID", "1")
+		controllers.FavoritesHandler(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("Expected status 400, got %d", w.Code)
+		}
+
+		// Check JSON response
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		if err != nil {
+			t.Fatalf("Failed to parse JSON response: %v", err)
+		}
+
+		if message := response["message"]; message != "asset_id is a required field"  {
+			t.Errorf("Response message: %v", message)
+		}
+		if errorCode := response["error_code"]; errorCode != "MISSING_ASSET_ID" {
+			t.Errorf("Response error_code: %v", errorCode)
+		}
+	})
+
+	t.Run("Add favorite without providing asset_type", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		reqBody := `{"asset_id": 1}`
+		req, _ := http.NewRequest("POST", "/favorites", strings.NewReader(reqBody))
+		req.Header.Set("User-ID", "1")
+		controllers.FavoritesHandler(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("Expected status 400, got %d", w.Code)
+		}
+
+		// Check JSON response
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		if err != nil {
+			t.Fatalf("Failed to parse JSON response: %v", err)
+		}
+
+		if message := response["message"]; message != "asset_type is a required field"  {
+			t.Errorf("Response message: %v", message)
+		}
+		if errorCode := response["error_code"]; errorCode != "MISSING_ASSET_TYPE" {
+			t.Errorf("Response error_code: %v", errorCode)
+		}
+	})
+
+	t.Run("Add favorite with negative asset_id", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		reqBody := `{"asset_id": -5, "asset_type": "chart"}`
+		req, _ := http.NewRequest("POST", "/favorites", strings.NewReader(reqBody))
+		req.Header.Set("User-ID", "1")
+		controllers.FavoritesHandler(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("Expected status 400, got %d", w.Code)
+		}
+
+		// Check JSON response
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		if err != nil {
+			t.Fatalf("Failed to parse JSON response: %v", err)
+		}
+
+		if message := response["message"]; message != "asset_id must be a positive integer"  {
+			t.Errorf("Response message: %v", message)
+		}
+
+		if errorCode := response["error_code"]; errorCode != "INVALID_ASSET_ID" {
+			t.Errorf("Response error_code: %v", errorCode)
+		}
+	})
+
+	t.Run("Add favorite with invalid asset_type", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		reqBody := `{"asset_id": 1, "asset_type": "invalid_type"}`
+		req, _ := http.NewRequest("POST", "/favorites", strings.NewReader(reqBody))
+		req.Header.Set("User-ID", "1")
+		controllers.FavoritesHandler(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("Expected status 400, got %d", w.Code)
+		}
+
+		// Check JSON response
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		if err != nil {
+			t.Fatalf("Failed to parse JSON response: %v", err)
+		}
+
+		if message := response["message"]; message != "Invalid asset_type (type must be 'chart', 'insight', or 'audience')"  {
+			t.Errorf("Response message: %v", message)
+		}
+
+		if errorCode := response["error_code"]; errorCode != "INVALID_ASSET_TYPE" {
+			t.Errorf("Response error_code: %v", errorCode)
+		}
+	})
+
+	t.Run("Add favorite for non-existing asset", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		reqBody := `{"asset_id": 9999, "asset_type": "chart"}`
+		req, _ := http.NewRequest("POST", "/favorites", strings.NewReader(reqBody))
+		req.Header.Set("User-ID", "1")
+		controllers.FavoritesHandler(w, req)
+
+		if w.Code != http.StatusNotFound {
+			t.Errorf("Expected status 404, got %d", w.Code)
+		}
+
+		// Check JSON response
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		if err != nil {
+			t.Fatalf("Failed to parse JSON response: %v", err)
+		}
+
+		if message := response["message"]; message != "Asset does not exist"  {
+			t.Errorf("Response message: %v", message)
+		}
+
+		if errorCode := response["error_code"]; errorCode != "ASSET_NOT_FOUND" {
+			t.Errorf("Response error_code: %v", errorCode)
+		}
+	})
+
+	t.Run("Add favorite that already exists", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		reqBody := `{"asset_id": 1, "asset_type": "chart"}`
+		req, _ := http.NewRequest("POST", "/favorites", strings.NewReader(reqBody))
+		req.Header.Set("User-ID", "1")
+		controllers.FavoritesHandler(w, req) 
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status 200, got %d", w.Code)
+		}
+
+		// Check JSON response
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		if err != nil {
+			t.Fatalf("Failed to parse JSON response: %v", err)
+		}
+
+		if assetID := int(response["asset_id"].(float64)); assetID != 1 {
+			t.Errorf("Response asset_id: %v", assetID)
+		}
+		if assetType := response["asset_type"]; assetType != "chart" {
+			t.Errorf("Response asset_type: %v", assetType)
+		}
+		if userID := int(response["user_id"].(float64)); userID != 1 {
+			t.Errorf("Response user_id: %v", userID)
+		}
+	})
+	
+	// t.Run("Add favorite successfully", func(t *testing.T) {})
+}
+
+

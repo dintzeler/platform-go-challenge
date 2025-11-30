@@ -5,6 +5,7 @@ import (
 	"github.com/dintzeler/platform-go-challenge/storage"
 	"github.com/dintzeler/platform-go-challenge/customerrors"
 	"net/http"
+	"os"
 )
 
 type FavoritesResponse struct {
@@ -14,7 +15,7 @@ type FavoritesResponse struct {
 }
 
 func getUserFavorites(userID int) []models.Favorite {
-	data, err := storage.LoadData("data.json")
+	data, err := storage.LoadData(os.Getenv("DATA_FILE"))
 	if err != nil {
 		return []models.Favorite{}
 	}
@@ -83,14 +84,14 @@ func updateAssetDescription(data *storage.DataStore, userID int, assetID int, as
 		}
 	}
 
-	storage.SaveData("data.json", data)
+	storage.SaveData(os.Getenv("DATA_FILE"), data)
 
 
 }
 
 
 func GetFavorites(userID int) (*FavoritesResponse, error) {
-	data, err := storage.LoadData("data.json")
+	data, err := storage.LoadData(os.Getenv("DATA_FILE"))
 	if err != nil {
 		return nil, &customerrors.ValidationError{
 			Message:   "Error loading data",
@@ -105,7 +106,7 @@ func GetFavorites(userID int) (*FavoritesResponse, error) {
 }
 
 func AddFavorite(userID int, assetID int, assetType models.AssetType) (int, error) {
-	data, err := storage.LoadData("data.json")
+	data, err := storage.LoadData(os.Getenv("DATA_FILE"))
 	if err != nil {
 		return http.StatusInternalServerError, &customerrors.ValidationError{
 			Message:   "Error loading data",
@@ -138,7 +139,7 @@ func AddFavorite(userID int, assetID int, assetType models.AssetType) (int, erro
 }
 
 func DeleteFavorite(userID int, assetID int, assetType models.AssetType) (int, error) {
-	data, err := storage.LoadData("data.json")
+	data, err := storage.LoadData(os.Getenv("DATA_FILE"))
 	if err != nil {
 		return http.StatusInternalServerError, &customerrors.ValidationError{
 			Message:   "Error loading data",
@@ -170,7 +171,7 @@ func DeleteFavorite(userID int, assetID int, assetType models.AssetType) (int, e
 }
 
 func UpdateFavorite(userID int, assetType models.AssetType, assetID int, description string) (int, error) {
-	data, err := storage.LoadData("data.json")
+	data, err := storage.LoadData(os.Getenv("DATA_FILE"))
 	if err != nil {
 		return http.StatusInternalServerError, &customerrors.ValidationError{
 			Message:   "Error loading data",

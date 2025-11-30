@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/dintzeler/platform-go-challenge/models"
+	"os"
 )
 
 func GetById[T models.Asset](items []T, id int) T {
@@ -33,7 +34,7 @@ func CreateFavorite(data *DataStore, userID int, assetID int, assetType models.A
 	}
 
     data.Favorites = append(data.Favorites, newFavorite)
-    return SaveData("data.json", data)
+    return SaveData(os.Getenv("DATA_FILE"), data)
 }
 
 func FavoriteExists(favorites []models.Favorite, assetID int, assetType models.AssetType) bool {
@@ -83,7 +84,7 @@ func UpdateAssetDescription(data *DataStore, userID int, assetID int, assetType 
 		}
 	}
 
-	return SaveData("data.json", data)
+	return SaveData(os.Getenv("DATA_FILE"), data)
 }
 
 func RemoveFavorite(data *DataStore, userID int, assetID int, assetType models.AssetType) error {
@@ -95,5 +96,5 @@ func RemoveFavorite(data *DataStore, userID int, assetID int, assetType models.A
 	}
 
 	data.Favorites = updatedFavorites
-	return SaveData("data.json", data)
+	return SaveData(os.Getenv("DATA_FILE"), data)
 }
