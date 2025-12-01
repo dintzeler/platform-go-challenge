@@ -17,7 +17,7 @@ func init() {
 
 func main() {
 	routes.SetupFavoritesRoutes()
-    http.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+    http.HandleFunc("/docs/", func(w http.ResponseWriter, r *http.Request) {
         http.ServeFile(w, r, "./openapi/redoc-static.html")
     })
 	fmt.Println("Server is running on port 8090")
