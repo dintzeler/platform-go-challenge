@@ -117,3 +117,12 @@ func RemoveFavorite(data *DataStore, userID int, assetID int, assetType models.A
 	data.Favorites = updatedFavorites
 	return SaveData(os.Getenv("DATA_FILE"), data)
 }
+
+func GetUserByEmail(email string, users []models.User) (*models.User) {
+	for _, user := range users {
+		if user.Email == email {
+			return &user
+		}
+	}
+	return nil
+}

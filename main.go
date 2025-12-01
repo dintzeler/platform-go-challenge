@@ -17,6 +17,7 @@ func init() {
 
 func main() {
 	routes.SetupFavoritesRoutes()
+    routes.SetupAuthRoutes()
     http.HandleFunc("/docs/", func(w http.ResponseWriter, r *http.Request) {
         http.ServeFile(w, r, "./openapi/redoc-static.html")
     })

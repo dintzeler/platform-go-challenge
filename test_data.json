@@ -19,7 +19,7 @@
           "y": 200
         }
       ],
-      "description": "Updated description"
+      "description": "This chart shows monthly sales over three months."
     },
     {
       "id": 2,
@@ -68,17 +68,17 @@
     {
       "id": 1,
       "text": "insight 1",
-      "description": "description insight 1"
+      "description": "This insight provides an overview of key metrics for Q1."
     },
     {
       "id": 2,
       "text": "insight 2",
-      "description": "description insight 2"
+      "description": "This insight provides an overview of key metrics for Q2."
     },
     {
       "id": 3,
       "text": "insight 3",
-      "description": "description insight 3"
+      "description": "This insight provides an overview of key metrics for Q3."
     }
   ],
   "audiences": [
@@ -89,7 +89,7 @@
       "age_group": "25-34",
       "hours_social_media_daily": 3,
       "number_of_purchases_last_month": 5,
-      "description": "description audience 1"
+      "description": "This audience represents females aged 25-34 from the USA who spend an average of 3 hours on social media daily and made 5 purchases last month."
     },
     {
       "id": 2,
@@ -98,19 +98,21 @@
       "age_group": "35-44",
       "hours_social_media_daily": 2,
       "number_of_purchases_last_month": 8,
-      "description": "New one"
+      "description": "This audience represents males aged 35-44 from Canada who spend an average of 2 hours on social media daily and made 8 purchases last month."
     }
   ],
   "users": [
     {
       "id": 1,
-      "name": "John Doe",
-      "email": "john@example.com"
+      "name": "User One",
+      "email": "user1@example.com",
+      "password": "hashed_password_1"
     },
     {
       "id": 2,
-      "name": "Jane Smith",
-      "email": "jane@example.com"
+      "name": "User Two",
+      "email": "user2@example.com",
+      "password": "hashed_password_2"
     }
   ],
   "favorites": [

@@ -4,10 +4,10 @@ import (
     "encoding/json"
     "net/http"
     "github.com/dintzeler/platform-go-challenge/services"
-	"strconv"
 	"github.com/dintzeler/platform-go-challenge/models"
 	"github.com/dintzeler/platform-go-challenge/validators"
 	"github.com/dintzeler/platform-go-challenge/customerrors"
+	"github.com/dintzeler/platform-go-challenge/middleware"
 )
 
 type AddFavoriteResponse struct {
@@ -41,9 +41,8 @@ func FavoritesHandler(w http.ResponseWriter, r *http.Request) {
 
 func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	userIDStr := r.Header.Get("User-ID")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&customerrors.ValidationError{
 			Message:   "Invalid User-ID",
@@ -75,11 +74,9 @@ func handleAddFavorite(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGetFavorites(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "application/json")
-
-	userIDStr := r.Header.Get("User-ID")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
+	w.Header().Set("Content-Type", "application/json")
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&customerrors.ValidationError{
 			Message:   "Invalid User-ID",
@@ -99,9 +96,8 @@ func handleGetFavorites(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleDeleteFavorite(w http.ResponseWriter, r *http.Request) {
-	userIDStr := r.Header.Get("User-ID")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&customerrors.ValidationError{
@@ -132,9 +128,9 @@ func handleDeleteFavorite(w http.ResponseWriter, r *http.Request) {
 
 func handleUpdateFavorite(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	userIDStr := r.Header.Get("User-ID")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&customerrors.ValidationError{
 			Message:   "Invalid User-ID",
