@@ -8,9 +8,9 @@ import (
 )
 
 type DataStore struct {
-	Charts []*models.Chart `json:"charts"`
-	Insights []*models.Insight `json:"insights"`
-	Audiences []*models.Audience `json:"audiences"`
+	Charts []models.Chart `json:"charts"`
+	Insights []models.Insight `json:"insights"`
+	Audiences []models.Audience `json:"audiences"`
 	Users []models.User `json:"users"`
 	Favorites []models.Favorite `json:"favorites"`
 }

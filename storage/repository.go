@@ -5,15 +5,31 @@ import (
 	"os"
 )
 
-func GetById[T models.Asset](items []T, id int) T {
-	for _, item := range items {
-		if item.GetID() == id {
-			return item
+func GetChartById(charts []models.Chart, id int) *models.Chart {
+	for _, chart := range charts {
+		if chart.GetID() == id {
+			return &chart
 		}
 	}
+	return nil
+}
 
-	var zero T
-	return zero
+func GetInsightById(insights []models.Insight, id int) *models.Insight {
+	for _, insight := range insights {
+		if insight.GetID() == id {
+			return &insight
+		}
+	}
+	return nil
+}
+
+func GetAudienceById(audiences []models.Audience, id int) *models.Audience {
+	for _, audience := range audiences {
+		if audience.GetID() == id {
+			return &audience
+		}
+	}
+	return nil
 }
 
 func GetUserFavorites(data *DataStore, userID int) []models.Favorite {
@@ -49,13 +65,13 @@ func FavoriteExists(favorites []models.Favorite, assetID int, assetType models.A
 func AssetExists(data *DataStore,assetID int, assetType models.AssetType) bool {
 	switch assetType {
 	case models.AssetTypeChart:
-		asset := GetById(data.Charts, assetID)
+		asset := GetChartById(data.Charts, assetID)
 		return asset != nil
 	case models.AssetTypeInsight:
-		asset := GetById(data.Insights, assetID)
+		asset := GetInsightById(data.Insights, assetID)
 		return asset != nil
 	case models.AssetTypeAudience:
-		asset := GetById(data.Audiences, assetID)
+		asset := GetAudienceById(data.Audiences, assetID)
 		return asset != nil
 	default:
 		return false

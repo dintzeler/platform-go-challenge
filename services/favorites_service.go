@@ -32,17 +32,17 @@ func buildFavoritesResponse(favorites []models.Favorite, data *storage.DataStore
     for _, fav := range favorites {
         switch fav.AssetType {
         case models.AssetTypeChart:
-			chart := storage.GetById(data.Charts, fav.AssetID)
+			chart := storage.GetChartById(data.Charts, fav.AssetID)
             if chart != nil {
                 favoritesResponse.Charts = append(favoritesResponse.Charts, *chart)
             }
         case models.AssetTypeInsight:
-			insight := storage.GetById(data.Insights, fav.AssetID)
+			insight := storage.GetInsightById(data.Insights, fav.AssetID)
             if insight != nil {
                 favoritesResponse.Insights = append(favoritesResponse.Insights, *insight)
             }
         case models.AssetTypeAudience:
-			audience := storage.GetById(data.Audiences, fav.AssetID)
+			audience := storage.GetAudienceById(data.Audiences, fav.AssetID)
             if audience != nil {
                 favoritesResponse.Audiences = append(favoritesResponse.Audiences, *audience)
             }
