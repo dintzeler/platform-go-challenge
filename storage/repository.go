@@ -81,22 +81,25 @@ func AssetExists(data *DataStore,assetID int, assetType models.AssetType) bool {
 func UpdateAssetDescription(data *DataStore, userID int, assetID int, assetType models.AssetType, description string) error {
 	switch assetType {
 	case models.AssetTypeChart:
-		for _, chart := range data.Charts {
-			if chart.GetID() == assetID {
-				chart.SetDescription(description)
+		for i := range data.Charts {
+			if data.Charts[i].GetID() == assetID {
+				data.Charts[i].SetDescription(description)
 			}
+			break
 		}
 	case models.AssetTypeInsight:
-		for _, insight := range data.Insights {
-			if insight.GetID() == assetID {
-				insight.SetDescription(description)
+		for i := range data.Insights {
+			if data.Insights[i].GetID() == assetID {
+				data.Insights[i].SetDescription(description)
 			}
+			break
 		}
 	case models.AssetTypeAudience:
-		for _, audience := range data.Audiences {
-			if audience.GetID() == assetID {
-				audience.SetDescription(description)
+		for i := range data.Audiences {
+			if data.Audiences[i].GetID() == assetID {
+				data.Audiences[i].SetDescription(description)
 			}
+			break
 		}
 	}
 

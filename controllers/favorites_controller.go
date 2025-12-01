@@ -16,6 +16,13 @@ type AddFavoriteResponse struct {
 	AssetType models.AssetType `json:"asset_type"`
 }
 
+type UpdateFavoriteResponse struct {
+	UserID int `json:"user_id"`
+	AssetID int `json:"asset_id"`
+	AssetType models.AssetType `json:"asset_type"`
+	UpdatedDescription string `json:"updated_description"`
+}
+
 
 func FavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -124,11 +131,10 @@ func handleDeleteFavorite(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleUpdateFavorite(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	userIDStr := r.Header.Get("User-ID")
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&customerrors.ValidationError{
 			Message:   "Invalid User-ID",
@@ -139,19 +145,23 @@ func handleUpdateFavorite(w http.ResponseWriter, r *http.Request) {
 
 	updateFavorite, err := validators.ValidateUpdateFavoriteRequest(r)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(err)
 		return
 	}
 
-	status, err := services.UpdateFavorite(userID, updateFavorite.AssetType, updateFavorite.AssetID, updateFavorite.Description)
+	status, err := services.UpdateFavorite(userID, *updateFavorite.AssetType, *updateFavorite.AssetID, updateFavorite.Description)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
 		json.NewEncoder(w).Encode(err)
 		return
 	}
 
 	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(UpdateFavoriteResponse{
+		UserID: userID,
+		AssetID: *updateFavorite.AssetID,
+		AssetType: *updateFavorite.AssetType,
+		UpdatedDescription: updateFavorite.Description,
+	})
 }

@@ -192,7 +192,7 @@ func UpdateFavorite(userID int, assetType models.AssetType, assetID int, descrip
 	if !favoriteExists {
 		return http.StatusForbidden, &customerrors.ValidationError{
 			Message:   "User does not have this asset as favorite",
-			ErrorCode: "FAVORITE_NOT_FOUND",
+			ErrorCode: "ASSET_NOT_FAVORITE",
 		}
 	}
 
@@ -201,5 +201,5 @@ func UpdateFavorite(userID int, assetType models.AssetType, assetID int, descrip
 		return http.StatusInternalServerError, err
 	}
 
-	return http.StatusNoContent, nil
+	return http.StatusOK, nil
 }

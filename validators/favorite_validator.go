@@ -19,8 +19,8 @@ type DeleteFavoriteRequest struct {
 }
 
 type UpdateFavoriteRequest struct {
-	AssetID int `json:"asset_id"`
-	AssetType models.AssetType `json:"asset_type"`
+	AssetID *int `json:"asset_id"`
+	AssetType *models.AssetType `json:"asset_type"`
 	Description string `json:"description"`
 }
 
@@ -33,12 +33,12 @@ func ValidateUpdateFavoriteRequest(r *http.Request) (*UpdateFavoriteRequest, err
 			ErrorCode: "INVALID_REQUEST_BODY",
 		}
 	}
-	err = validateAssetID(&updateFavorite.AssetID)
+	err = validateAssetID(updateFavorite.AssetID)
 	if err != nil {
 		return nil, err
 	}
 
-	err = validateAssetType(&updateFavorite.AssetType)
+	err = validateAssetType(updateFavorite.AssetType)
 	if err != nil {
 		return nil, err
 	}
