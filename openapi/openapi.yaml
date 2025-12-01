@@ -5,19 +5,16 @@ info:
 tags:
   - name: favorites
     description: Operations related to favorite assets
+  - name: auth
+    description: Operations related to authentication
+security:
+  - BearerAuth: []
 paths:
   /favorites:
     get:
       tags:
         - favorites
       summary: Retrieve a list of favorited assets for a user
-      parameters:
-        - in: header
-          name: User-ID
-          schema:
-            type: integer
-          required: true
-          description: ID of the user whose favorites are to be retrieved
       responses:
         "200":
           description: A list of favorited assets
@@ -56,13 +53,6 @@ paths:
       tags:
         - favorites
       summary: Add a new favorite asset for a user
-      parameters:
-        - in: header
-          name: User-ID
-          schema:
-            type: integer
-          required: true
-          description: ID of the user whose favorites are to be retrieved
       requestBody:
         required: true
         content:
@@ -133,13 +123,6 @@ paths:
       summary: Update the description of a favorited asset
       tags:
         - favorites
-      parameters:
-        - in: header
-          name: User-ID
-          schema:
-            type: integer
-          required: true
-          description: ID of the user whose favorites are to be retrieved
       requestBody:
         required: true
         content:
@@ -204,12 +187,6 @@ paths:
       tags:
         - favorites
       parameters:
-        - in: header
-          name: User-ID
-          schema:
-            type: integer
-          required: true
-          description: ID of the user whose favorites are to be retrieved
         - in: query
           name: asset_id
           schema:
@@ -244,6 +221,48 @@ paths:
                 $ref: "#/components/schemas/Error"
         "404":
           description: Favorite asset not found or does not exist in favorites for the user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Error"
+                  - type: "null"
+  /login:
+    post:
+      tags:
+        - auth
+      security: []
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        "401":
+          description: Unauthorized - Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User not found
           content:
             application/json:
               schema:
@@ -308,6 +327,13 @@ components:
           type: integer
         description:
           type: string
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
     Error:
       type: object
       properties:
@@ -315,3 +341,9 @@ components:
           type: string
         error_code:
           type: string
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT based authentication using Bearer tokens
