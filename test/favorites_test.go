@@ -10,6 +10,8 @@ import (
     "os"
     "path/filepath"
     "runtime"
+	"math/rand/v2"
+	"fmt"
 )
 
 func init() {
@@ -261,7 +263,8 @@ func TestUpdateFavorite(t *testing.T) {
 
 	t.Run("Update favorite successfully", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		reqBody := `{"asset_id": 1, "asset_type": "chart", "description": "Updated description"}`
+		UpdatedDescription := fmt.Sprintf("Updated description %s", generateRandomNDigitNumber(5))
+		reqBody := fmt.Sprintf(`{"asset_id": 1, "asset_type": "chart", "description": "%s"}`, UpdatedDescription)
 		req, _ := http.NewRequest("PATCH", "/favorites", strings.NewReader(reqBody))
 		req.Header.Set("User-ID", "1")
 		controllers.FavoritesHandler(w, req)
@@ -289,12 +292,12 @@ func TestUpdateFavorite(t *testing.T) {
 			t.Errorf("Response user_id: %v", userID)
 		}
 
-		if description := response["updated_description"]; description != "Updated description" {
+		if description := response["updated_description"]; description != UpdatedDescription {
 			t.Errorf("Response description: %v", description)
 		}
 
 		//verify description changed
-		verifyDescriptionChanged(t, 1, 1, "chart", "Updated description")
+		verifyDescriptionChanged(t, 1, 1, "chart", UpdatedDescription)
 	})
 }
 
@@ -533,5 +536,13 @@ func testErrorResponse(t *testing.T, w *httptest.ResponseRecorder, expectedStatu
 	}
 }
 
+func generateRandomNDigitNumber(n int) string {
+	randomNDigitNumber := ""
+	for i := 0; i < n; i++ {
+		digit := rand.IntN(10)
+		randomNDigitNumber += fmt.Sprintf("%d", digit)
+	}
+	return randomNDigitNumber
+}
 
 
