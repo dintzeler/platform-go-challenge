@@ -28,8 +28,8 @@ func AuthenticateUser(email string, password string) (string, int, error) {
 
 	if user.Password != password {
 		return "", 401, &customerrors.ValidationError{
-			Message: "Invalid credentials",
-			ErrorCode: "INVALID_CREDENTIALS",
+			Message: "Wrong password",
+			ErrorCode: "WRONG_PASSWORD",
 		}
 	}
 

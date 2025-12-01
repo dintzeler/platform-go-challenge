@@ -29,13 +29,6 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validators.ValidateLoginRequest(r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(err)
-		return
-	}
-
 	token, status, err := services.AuthenticateUser(*loginRequest.Email, *loginRequest.Password)
 	if err != nil {
 		w.WriteHeader(status)
