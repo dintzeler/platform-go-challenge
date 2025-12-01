@@ -2,6 +2,8 @@ package tests
 
 import (
     "github.com/dintzeler/platform-go-challenge/controllers"
+	"github.com/dintzeler/platform-go-challenge/models"
+	"github.com/dintzeler/platform-go-challenge/storage"
     "net/http"
     "net/http/httptest"
     "testing"
@@ -30,6 +32,184 @@ func init() {
     if _, err := os.Stat(dataFile); os.IsNotExist(err) {
         panic("test_data.json not found at: " + dataFile)
     }
+}
+
+func TestGetFavorites(t *testing.T) {
+	t.Run("Get favorites with invalid User-ID", func(t *testing.T) {
+		testInvalidUserID(t, "GET")
+	})
+
+	t.Run("Get favorites successfully", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/favorites", nil)
+		req.Header.Set("User-ID", "1")
+		controllers.FavoritesHandler(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status 200, got %d", w.Code)
+		}
+
+		// Check JSON response
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		if err != nil {
+			t.Fatalf("Failed to parse JSON response: %v", err)
+		}
+
+		if charts, ok := response["charts"].([]interface{}); !ok {
+			t.Errorf("Response charts is missing or not an array")
+		} else if len(charts) != 1 {
+			t.Errorf("Expected 1 chart, got %d", len(charts))
+		}else{
+			chart := charts[0].(map[string]interface{})
+			testChart(t, chart)
+		}
+
+		if insights, ok := response["insights"].([]interface{}); !ok {
+			t.Errorf("Response insights is missing or not an array")
+		} else if len(insights) != 1 {
+			t.Errorf("Expected 1 insight, got %d", len(insights))
+		}else{
+			insight := insights[0].(map[string]interface{})
+			testInsight(t, insight)
+		}
+
+		if audiences, ok := response["audiences"].([]interface{}); !ok {
+			t.Errorf("Response audiences is missing or not an array")
+		} else if len(audiences) != 2 {
+			t.Errorf("Expected 2 audiences, got %d", len(audiences))
+		}else{
+			for _, a := range audiences {
+				audience := a.(map[string]interface{})
+				testAudience(t, audience)
+			}
+		}
+
+	})	
+}
+
+func testChart(t *testing.T, chart map[string]interface{}) {
+	chartDatabase := findChartInTestData(t, int(chart["id"].(float64)))
+
+	if chartID := int(chart["id"].(float64)); chartID != chartDatabase.ID {
+		t.Errorf("Chart ID mismatch: expected %d, got %d", chartDatabase.ID, chartID)
+	}
+	if title := chart["title"].(string); title != chartDatabase.Title {
+		t.Errorf("Chart Title mismatch: expected %s, got %s", chartDatabase.Title, title)
+	}
+	if description := chart["description"].(string); description != chartDatabase.Description {
+		t.Errorf("Chart Description mismatch: expected %s, got %s", chartDatabase.Description, description)
+	}
+	for i, point := range chart["data"].([]interface{}) {
+		dataPoint := point.(map[string]interface{})
+		expectedPoint := chartDatabase.Data[i]
+		if dataPoint["x"] != expectedPoint.X || dataPoint["y"] != expectedPoint.Y {
+			t.Errorf("Chart data point mismatch at index %d: expected (%v, %v), got (%v, %v)", i, expectedPoint.X, expectedPoint.Y, dataPoint["x"], dataPoint["y"])
+		}
+	}
+}
+
+func testInsight(t *testing.T, insight map[string]interface{}) {
+	insightDatabase := findInsightInTestData(t, int(insight["id"].(float64)))
+
+	if insightID := int(insight["id"].(float64)); insightID != insightDatabase.ID {
+		t.Errorf("Insight ID mismatch: expected %d, got %d", insightDatabase.ID, insightID)
+	}
+
+	if title := insight["text"].(string); title != insightDatabase.Text {
+		t.Errorf("Insight Text mismatch: expected %s, got %s", insightDatabase.Text, title)
+	}
+
+	if content := insight["description"].(string); content != insightDatabase.Description {
+		t.Errorf("Insight Description mismatch: expected %s, got %s", insightDatabase.Description, content)
+	}
+}
+
+func testAudience(t *testing.T, audience map[string]interface{}) {
+	audienceDatabase := findAudienceInTestData(t, int(audience["id"].(float64)))
+
+	if audienceID := int(audience["id"].(float64)); audienceID != audienceDatabase.ID {
+		t.Errorf("Audience ID mismatch: expected %d, got %d", audienceDatabase.ID, audienceID)
+	}
+
+	if gender := audience["gender"].(string); gender != audienceDatabase.Gender {
+		t.Errorf("Audience Gender mismatch: expected %s, got %s", audienceDatabase.Gender, gender)
+	}
+
+	if age_group := audience["age_group"].(string); age_group != audienceDatabase.AgeGroup {
+		t.Errorf("Audience Age group mismatch: expected %s, got %s", audienceDatabase.AgeGroup, age_group)
+	}
+
+	if hours_social_media_daily := int(audience["hours_social_media_daily"].(float64)); hours_social_media_daily != audienceDatabase.HoursSocialMediaDaily {
+		t.Errorf("Audience HoursSocialMediaDaily mismatch: expected %d, got %d", audienceDatabase.HoursSocialMediaDaily, hours_social_media_daily)
+	}
+
+	if number_of_purchases_last_month := int(audience["number_of_purchases_last_month"].(float64)); number_of_purchases_last_month != audienceDatabase.NumberOfPurchasesLastMonth {
+		t.Errorf("Audience NumberOfPurchasesLastMonth mismatch: expected %d, got %d", audienceDatabase.NumberOfPurchasesLastMonth, number_of_purchases_last_month)
+	}
+
+	if description := audience["description"].(string); description != audienceDatabase.Description {
+		t.Errorf("Audience Description mismatch: expected %s, got %s", audienceDatabase.Description, description)
+	}
+}
+
+func findChartInTestData(t *testing.T, chartID int) *models.Chart {
+	dataFile := os.Getenv("DATA_FILE")
+	if dataFile == "" {
+		t.Fatal("DATA_FILE environment variable not set")
+	}
+
+
+    dataStore, err := storage.LoadData(dataFile)
+    if err != nil {
+        t.Fatalf("Failed to load test data: %v", err)
+    }
+
+	for _, chart := range dataStore.Charts {
+		if chart.ID == chartID {
+			return &chart
+		}
+	}
+	return nil
+}
+
+func findInsightInTestData(t *testing.T, insightID int) *models.Insight {
+	dataFile := os.Getenv("DATA_FILE")
+	if dataFile == "" {
+		t.Fatal("DATA_FILE environment variable not set")
+	}
+
+	dataStore, err := storage.LoadData(dataFile)
+	if err != nil {
+		t.Fatalf("Failed to load test data: %v", err)
+	}
+
+	for _, insight := range dataStore.Insights {
+		if insight.ID == insightID {
+			return &insight
+		}
+	}
+	return nil
+}
+
+func findAudienceInTestData(t *testing.T, audienceID int) *models.Audience {
+	dataFile := os.Getenv("DATA_FILE")
+	if dataFile == "" {
+		t.Fatal("DATA_FILE environment variable not set")
+	}
+
+	dataStore, err := storage.LoadData(dataFile)
+	if err != nil {
+		t.Fatalf("Failed to load test data: %v", err)
+	}
+
+	for _, audience := range dataStore.Audiences {
+		if audience.ID == audienceID {
+			return &audience
+		}
+	}
+
+	return nil
 }
 
 func TestAddFavorite(t *testing.T) {
@@ -375,115 +555,65 @@ func TestDeleteFavorite(t *testing.T) {
 	})
 }
 
-func verifyFavoriteInDataFile(t *testing.T, userID, assetID int, assetType string) {
+
+func verifyFavoriteInDataFile(t *testing.T, userID, assetID int, assetType models.AssetType) {
     dataFile := os.Getenv("DATA_FILE")
     if dataFile == "" {
         t.Fatal("DATA_FILE environment variable not set")
     }
 
-    content, err := os.ReadFile(dataFile)
+    dataStore, err := storage.LoadData(dataFile)
     if err != nil {
-        t.Fatalf("Failed to read test data file: %v", err)
+        t.Fatalf("Failed to load test data: %v", err)
     }
 
-    var data map[string]interface{}
-    err = json.Unmarshal(content, &data)
-    if err != nil {
-        t.Fatalf("Failed to parse test data JSON: %v", err)
-    }
-
-    favorites, ok := data["favorites"].([]interface{})
-    if !ok {
-        t.Fatal("Favorites not found or not an array in test data")
-    }
-
-    found := false
-    for _, fav := range favorites {
-        favorite := fav.(map[string]interface{})
-        favUserID := int(favorite["user_id"].(float64))
-        favAssetID := int(favorite["asset_id"].(float64))
-        favAssetType := favorite["asset_type"].(string)
-
-        if favUserID == userID && favAssetID == assetID && favAssetType == assetType {
-            found = true
-            break
+    for _, fav := range dataStore.Favorites {
+        if fav.UserID == userID && fav.AssetID == assetID && fav.AssetType == assetType {
+            return
         }
     }
 
-    if !found {
-        t.Errorf("Favorite not found in data file: user_id=%d, asset_id=%d, asset_type=%s", userID, assetID, assetType)
-    }
+    t.Errorf("Favorite not found in data file: user_id=%d, asset_id=%d, asset_type=%s", userID, assetID, assetType)
 }
 
 func verifyDescriptionChanged(t *testing.T, userID, assetID int, assetType, expectedDescription string) {
-	dataFile := os.Getenv("DATA_FILE")
-	if dataFile == "" {
-		t.Fatal("DATA_FILE environment variable not set")
-	}
+    dataFile := os.Getenv("DATA_FILE")
+    if dataFile == "" {
+        t.Fatal("DATA_FILE environment variable not set")
+    }
 
-	content, err := os.ReadFile(dataFile)
-	if err != nil {
-		t.Fatalf("Failed to read test data file: %v", err)
-	}
+    data, err := storage.LoadData(dataFile)
+    if err != nil {
+        t.Fatalf("Failed to load test data: %v", err)
+    }
 
-	var data map[string]interface{}
-	err = json.Unmarshal(content, &data)
-	if err != nil {
-		t.Fatalf("Failed to parse test data JSON: %v", err)
-	}
-
-	charts, ok := data["charts"].([]interface{})
-	if !ok {
-		t.Fatal("Charts not found or not an array in test data")
-	}
-
-	found := false
-	for _, ch := range charts {
-		chart := ch.(map[string]interface{})
-		chID := int(chart["id"].(float64))
-		if chID == assetID {
-			description := chart["description"].(string)
+	for _, ch := range data.Charts {
+		if ch.ID == assetID {
+			description := ch.Description
 			if description != expectedDescription {
 				t.Errorf("Description mismatch: expected '%s', got '%s'", expectedDescription, description)
 			}
-			found = true
-			break
+			return
 		}
 	}
 
-	if !found {
-		t.Errorf("Asset not found in data file: asset_id=%d, asset_type=%s", assetID, assetType)
-	}
+	t.Errorf("Asset not found in data file: asset_id=%d, asset_type=%s", assetID, assetType)
+	
 }
 
-func verifyFavoriteRemovedFromDataFile(t *testing.T, userID, assetID int, assetType string) {
+func verifyFavoriteRemovedFromDataFile(t *testing.T, userID, assetID int, assetType models.AssetType) {
 	dataFile := os.Getenv("DATA_FILE")
 	if dataFile == "" {
 		t.Fatal("DATA_FILE environment variable not set")
 	}
 
-	content, err := os.ReadFile(dataFile)
+	data, err := storage.LoadData(dataFile)
 	if err != nil {
-		t.Fatalf("Failed to read test data file: %v", err)
+		t.Fatalf("Failed to load test data file: %v", err)
 	}
 
-	var data map[string]interface{}
-	err = json.Unmarshal(content, &data)
-	if err != nil {
-		t.Fatalf("Failed to parse test data JSON: %v", err)
-	}
-
-	favorites, ok := data["favorites"].([]interface{})
-	if !ok {
-		t.Fatal("Favorites not found or not an array in test data")
-	}
-
-	for _, fav := range favorites {
-		favorite := fav.(map[string]interface{})
-		favUserID := int(favorite["user_id"].(float64))
-		favAssetID := int(favorite["asset_id"].(float64))
-		favAssetType := favorite["asset_type"].(string)
-		if favUserID == userID && favAssetID == assetID && favAssetType == assetType {
+	for _, fav := range data.Favorites {
+		if fav.UserID == userID && fav.AssetID == assetID && fav.AssetType == assetType {
 			t.Errorf("Favorite still found in data file after deletion: user_id=%d, asset_id=%d, asset_type=%s", userID, assetID, assetType)
 			return
 		}
