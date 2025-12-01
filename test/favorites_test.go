@@ -62,6 +62,10 @@ func loginAndGetToken() (string, error) {
 }
 
 func TestGetFavorites(t *testing.T) {
+	t.Run("Get favorites without token", func(t *testing.T) {
+		testNoToken(t, "GET")
+	})
+
 	t.Run("Get favorites with invalid token", func(t *testing.T) {
 		testInvalidToken(t, "GET")
 	})
@@ -115,6 +119,10 @@ func TestGetFavorites(t *testing.T) {
 }
 
 func TestAddFavorite(t *testing.T) {
+	t.Run("Get favorites without token", func(t *testing.T) {
+		testNoToken(t, "POST")
+	})
+	
 	t.Run("Add favorite with invalid token", func(t *testing.T) {
 		testInvalidToken(t, "POST")
 	})
@@ -243,6 +251,10 @@ func TestAddFavorite(t *testing.T) {
 }
 
 func TestUpdateFavorite(t *testing.T) {
+	t.Run("Get favorites without token", func(t *testing.T) {
+		testNoToken(t, "PATCH")
+	})
+
 	t.Run("Update favorite with invalid token", func(t *testing.T) {
 		testInvalidToken(t, "PATCH")
 	})
@@ -384,6 +396,10 @@ func TestUpdateFavorite(t *testing.T) {
 }
 
 func TestDeleteFavorite(t *testing.T) {
+	t.Run("Get favorites without token", func(t *testing.T) {
+		testNoToken(t, "DELETE")
+	})
+
 	t.Run("Delete favorite with invalid Token", func(t *testing.T) {
 		testInvalidToken(t, "DELETE")
 	})
@@ -522,6 +538,14 @@ func verifyFavoriteRemovedFromDataFile(t *testing.T, userID, assetID int, assetT
 	}
 }
 
+func testNoToken(t *testing.T, method string) {
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(method, "/favorites", nil)
+	callFavoritesWithAuth(w, req)
+
+	testErrorResponse(t, w, http.StatusUnauthorized, "Missing authorization header", "MISSING_AUTH_HEADER")
+}
+
 func testInvalidToken(t *testing.T, method string) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(method, "/favorites", nil)
@@ -532,20 +556,7 @@ func testInvalidToken(t *testing.T, method string) {
 		t.Errorf("Expected status 401, got %d", w.Code)
 	}
 
-	// Check JSON response
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	if err != nil {
-		t.Fatalf("Failed to parse JSON response: %v", err)
-	}
-
-	if message := response["message"]; message != "Invalid or expired token"  {
-		t.Errorf("Response message: %v", message)
-	}
-
-	if errorCode := response["error_code"]; errorCode != "INVALID_TOKEN" {
-		t.Errorf("Response error_code: %v", errorCode)
-	}
+	testErrorResponse(t, w, http.StatusUnauthorized, "Invalid or expired token", "INVALID_TOKEN")
 }
 
 func testErrorResponse(t *testing.T, w *httptest.ResponseRecorder, expectedStatus int, expectedMessage, expectedErrorCode string) {
