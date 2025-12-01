@@ -243,7 +243,79 @@ func TestAddFavorite(t *testing.T) {
 		}
 	})
 	
-	// t.Run("Add favorite successfully", func(t *testing.T) {})
+	t.Run("Add favorite successfully", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		reqBody := `{"asset_id": 2, "asset_type": "insight"}`
+		req, _ := http.NewRequest("POST", "/favorites", strings.NewReader(reqBody))
+		req.Header.Set("User-ID", "1")
+		controllers.FavoritesHandler(w, req)
+
+		if w.Code != http.StatusCreated {
+			t.Errorf("Expected status 201, got %d", w.Code)
+		}
+
+		// Check JSON response
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		if err != nil {
+			t.Fatalf("Failed to parse JSON response: %v", err)
+		}
+
+		if assetID := int(response["asset_id"].(float64)); assetID != 2 {
+			t.Errorf("Response asset_id: %v", assetID)
+		}
+
+		if assetType := response["asset_type"]; assetType != "insight" {
+			t.Errorf("Response asset_type: %v", assetType)
+		}
+
+		if userID := int(response["user_id"].(float64)); userID != 1 {
+			t.Errorf("Response user_id: %v", userID)
+		}
+
+		// Verify favorite is persisted in data file
+		verifyFavoriteInDataFile(t, 1, 2, "insight")
+	})
+}
+
+func verifyFavoriteInDataFile(t *testing.T, userID, assetID int, assetType string) {
+    dataFile := os.Getenv("DATA_FILE")
+    if dataFile == "" {
+        t.Fatal("DATA_FILE environment variable not set")
+    }
+
+    content, err := os.ReadFile(dataFile)
+    if err != nil {
+        t.Fatalf("Failed to read test data file: %v", err)
+    }
+
+    var data map[string]interface{}
+    err = json.Unmarshal(content, &data)
+    if err != nil {
+        t.Fatalf("Failed to parse test data JSON: %v", err)
+    }
+
+    favorites, ok := data["favorites"].([]interface{})
+    if !ok {
+        t.Fatal("Favorites not found or not an array in test data")
+    }
+
+    found := false
+    for _, fav := range favorites {
+        favorite := fav.(map[string]interface{})
+        favUserID := int(favorite["user_id"].(float64))
+        favAssetID := int(favorite["asset_id"].(float64))
+        favAssetType := favorite["asset_type"].(string)
+
+        if favUserID == userID && favAssetID == assetID && favAssetType == assetType {
+            found = true
+            break
+        }
+    }
+
+    if !found {
+        t.Errorf("Favorite not found in data file: user_id=%d, asset_id=%d, asset_type=%s", userID, assetID, assetType)
+    }
 }
 
 
